@@ -1,0 +1,13 @@
+.wrapper {
+    min-width: 500px;
+    max-width: 100%;
+}
+
+.list-title {
+    font-size: 24px;
+    text-align: center;
+}
+
+.task-list {
+    padding: 20px;
+}

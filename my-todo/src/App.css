@@ -1,0 +1,23 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 500px;
+  min-height: 250px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.main-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 20px;
+}
