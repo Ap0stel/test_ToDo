@@ -1,5 +1,5 @@
 import classes from './Task.module.css'
-import Checkbox from '@mui/material/Checkbox';
+
 function Task( {task}) {
     return (
         <div className={classes.task}>
