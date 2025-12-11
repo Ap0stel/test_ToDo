@@ -1,23 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import TaskList from "../TaskList/TaskList";
 import classes from './TasksFetch.module.css';
+import { Todo } from '../../types';
 
 export default function TasksFetch() {
-    const [todos, setTodos] = useState([]);
-    const [isLoadingTasks, setIsLoadingTasks] = useState(true);
-    const [error, setError] = useState(null);
+    const [todos, setTodos] = useState<Todo[]>([]);
+    const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetch("https://jsonplaceholder.typicode.com/todos")
-        .then((result) => result.json())
-        .then((toDos) => {
-            setTodos(toDos.slice(0,20));
-            setIsLoadingTasks(false);
-        })
-        .catch(() => {
-            setError('Ошибка в получении контента');
-            setIsLoadingTasks(false);
-        });
+            .then((result) => result.json())
+            .then((toDos: Todo[]) => {
+                setTodos(toDos.slice(0, 20));
+                setIsLoadingTasks(false);
+            })
+            .catch(() => {
+                setError('Ошибка в получении контента');
+                setIsLoadingTasks(false);
+            });
     }, []);
 
     const activeTasks = useMemo(
@@ -25,7 +26,7 @@ export default function TasksFetch() {
         [todos]
     );
 
-    const completedTasks =useMemo(
+    const completedTasks = useMemo(
         () => todos.filter((task) => task.completed),
         [todos]
     );

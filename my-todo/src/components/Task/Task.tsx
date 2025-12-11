@@ -1,17 +1,22 @@
 import classes from './Task.module.css'
+import { Todo } from '../../types'
 
-function Task( {task}) {
+interface TaskProps {
+    task: Todo;
+}
+
+function Task({ task }: TaskProps) {
     return (
         <div className={classes.task}>
             <div className={classes['task-check']}>
-                <input 
+                <input
                     type='checkbox'
                     id={`checkbox-${task.title}`}
-                />    
+                    defaultChecked={task.completed}
+                />
             </div>
             <div className={classes['task-info']}>
                 <h3 className={classes['task-info_title']}>{task.title}</h3>
-                <p className={classes['task-info_description']}>{task.description}</p>
             </div>
             <div className={classes['task-actions']}>
 
