@@ -7,6 +7,7 @@ function Task( {task}) {
                 <input 
                     type='checkbox'
                     id={`checkbox-${task.title}`}
+                    checked={task.completed}
                 />    
             </div>
             <div className={classes['task-info']}>
