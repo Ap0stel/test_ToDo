@@ -3,16 +3,18 @@ import { Todo } from '../../types'
 
 interface TaskProps {
     task: Todo;
+    onToggle: (id: number) => void;
 }
 
-function Task({ task }: TaskProps) {
+function Task({ task, onToggle }: TaskProps) {
     return (
         <div className={classes.task}>
             <div className={classes['task-check']}>
                 <input
                     type='checkbox'
-                    id={`checkbox-${task.title}`}
-                    defaultChecked={task.completed}
+                    id={`checkbox-${task.id}`}
+                    checked={task.completed}
+                    onChange={() => onToggle(task.id)}
                 />
             </div>
             <div className={classes['task-info']}>
