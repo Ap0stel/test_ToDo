@@ -32,6 +32,10 @@ export default function TasksFetch() {
     [todos]
   );
 
+  // коллбеки нужно передавать в дочерние компоненты, используя useCallback. в таком случае
+  // ссылка на функцию не будет меняться на каждом рендере
+  // иначе React будет считать, что проп toggleTask изменился, и это вызовет лишние перерисовки / эффекты / пересоздание подписок.
+
   const toggleTask = useCallback(
     (taskId: number) => {
       const updatedTodos = todos.map((task) =>
