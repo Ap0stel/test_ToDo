@@ -23,7 +23,6 @@ export default function TasksFetch() {
 
   const activeTasks = useMemo(
     () => todos.filter((task) => !task.completed),
-
     [todos]
   );
 
@@ -47,17 +46,36 @@ export default function TasksFetch() {
     [todos]
   );
 
+  const updateTaskTitle = useCallback(
+    (taskId: number, newTitle: string) => {
+      if (newTitle.trim() === '') {
+        return;
+      }
+
+      const updTodos = todos.map((task) => 
+        task.id === taskId ? {...task, title: newTitle.trim() } : task
+    );
+    setTodos(updTodos);
+    }, [todos]
+  );
+
   if (isLoadingTasks)
     return <p className={classes["loading-message"]}>Загрузка контента...</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <>
-      <TaskList title="Активные" tasks={activeTasks} onToggle={toggleTask} />
+      <TaskList 
+        title="Активные" 
+        tasks={activeTasks} 
+        onToggle={toggleTask} 
+        onUpdateTitle={updateTaskTitle}
+      />
       <TaskList
         title="Завершенные"
         tasks={completedTasks}
         onToggle={toggleTask}
+        onUpdateTitle={updateTaskTitle}
       />
     </>
   );

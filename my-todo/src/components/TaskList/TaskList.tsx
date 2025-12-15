@@ -6,12 +6,14 @@ interface TaskListProps {
   tasks: Todo[];
   title: string;
   onToggle: (id: number) => void;
+  onUpdateTitle: (taskId: number, newTitle: string) => void;
 }
 
 export default function TaskList({
   tasks,
   title,
   onToggle,
+  onUpdateTitle,
 }: Readonly<TaskListProps>) {
   console.log("Tasks: ", tasks);
   return (
@@ -20,7 +22,7 @@ export default function TaskList({
       <div className={classes["task-list"]}>
         {tasks.length
           ? tasks.map((task) => {
-              return <Task task={task} key={task.id} onToggle={onToggle} />;
+              return <Task task={task} key={task.id} onToggle={onToggle} onUpdateTitle={onUpdateTitle}/>;
             })
           : "Список задач пуст"}
       </div>

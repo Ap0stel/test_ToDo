@@ -27,7 +27,15 @@
 }
 
 .task-info_title {
+    cursor: pointer;
     margin: 0;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.task-info_title:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .task-info_description {
@@ -40,4 +48,19 @@
     align-items: center;
     right: 10px;
     top: 10px;
+}
+
+.task-info_title-input {
+    width: 100%;
+    padding: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid #4CAF50; 
+    border-radius: 4px;
+    outline: none;
+}
+
+.task-info_title-input:focus {
+    border-color: #45a049;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
 }
