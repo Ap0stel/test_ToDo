@@ -6,9 +6,10 @@ interface TaskProps {
   task: Todo;
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
+  onDelete: (taskId:number) => void;
 }
 
-function Task({ task, onToggle, onUpdateTitle }: Readonly<TaskProps>) {
+function Task({ task, onToggle, onUpdateTitle, onDelete }: Readonly<TaskProps>) {
     const [isEditing, setIsEditing] = useState(false);
     const [editingTitle, setEditingTitle] = useState(task.title);
 
@@ -38,6 +39,14 @@ function Task({ task, onToggle, onUpdateTitle }: Readonly<TaskProps>) {
   
   return (
     <div className={classes.task}>
+      <div className={classes["task-actions"]}>
+        <button
+          className={classes["task-delete"]}
+          onClick={() => onDelete(task.id)}>
+          X
+        </button>
+
+      </div>
       <div className={classes["task-check"]}>
         <input
           type="checkbox"

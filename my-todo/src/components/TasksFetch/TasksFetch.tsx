@@ -8,6 +8,9 @@ export default function TasksFetch() {
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [newTaskTitle, setNewTaskTitle] = useState<string>("");
+
   useEffect(() => {
     fetch("https://jsonplaceholder.typicode.com/todos")
       .then((result) => result.json())
@@ -59,23 +62,70 @@ export default function TasksFetch() {
     }, [todos]
   );
 
+  const deleteTask = (taskId: number) => {
+    setTodos(actualTodos =>
+      actualTodos.filter(task => task.id != taskId)
+    );
+  };
+
+  const createTask = () => {
+    if (newTaskTitle.trim() === '') return;
+
+    const newTask = {
+      id: Date.now(),
+      title: newTaskTitle,
+      completed: false,
+    };
+
+    setTodos(actualTodos => [newTask, ...actualTodos]);
+    setNewTaskTitle('');
+    setIsCreating(false);
+  };
+
+  const handleCreateKeyDown = (
+    e:React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key ==='Enter') {
+      createTask();
+    }
+  };
+
+
+
   if (isLoadingTasks)
     return <p className={classes["loading-message"]}>Загрузка контента...</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <>
+      <div className={classes["create-task"]}>
+        {isCreating ? (
+          <input
+            type='text'
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            placeholder='Введите задачу и нажмите Enter'
+            autoFocus
+          />
+        ) : (
+          <button onClick={() => setIsCreating(true)}>
+            + Добавить задачу
+          </button>
+        )}
+      </div>
       <TaskList 
         title="Активные" 
         tasks={activeTasks} 
         onToggle={toggleTask} 
         onUpdateTitle={updateTaskTitle}
+        onDelete={deleteTask}
       />
       <TaskList
         title="Завершенные"
         tasks={completedTasks}
         onToggle={toggleTask}
         onUpdateTitle={updateTaskTitle}
+        onDelete={deleteTask}
       />
     </>
   );

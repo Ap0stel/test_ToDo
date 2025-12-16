@@ -7,6 +7,7 @@ interface TaskListProps {
   title: string;
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
+  onDelete: (taskId: number) => void;
 }
 
 export default function TaskList({
@@ -14,6 +15,7 @@ export default function TaskList({
   title,
   onToggle,
   onUpdateTitle,
+  onDelete,
 }: Readonly<TaskListProps>) {
   console.log("Tasks: ", tasks);
   return (
@@ -22,7 +24,12 @@ export default function TaskList({
       <div className={classes["task-list"]}>
         {tasks.length
           ? tasks.map((task) => {
-              return <Task task={task} key={task.id} onToggle={onToggle} onUpdateTitle={onUpdateTitle}/>;
+              return <Task task={task}
+                key={task.id} 
+                onToggle={onToggle} 
+                onUpdateTitle={onUpdateTitle}
+                onDelete={onDelete}
+                />;
             })
           : "Список задач пуст"}
       </div>
