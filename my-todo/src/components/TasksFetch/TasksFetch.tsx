@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-autofocus */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TaskList from "../TaskList/TaskList";
 import classes from "./TasksFetch.module.css";
@@ -51,47 +52,43 @@ export default function TasksFetch() {
 
   const updateTaskTitle = useCallback(
     (taskId: number, newTitle: string) => {
-      if (newTitle.trim() === '') {
+      if (newTitle.trim() === "") {
         return;
       }
 
-      const updTodos = todos.map((task) => 
-        task.id === taskId ? {...task, title: newTitle.trim() } : task
-    );
-    setTodos(updTodos);
-    }, [todos]
+      const updTodos = todos.map((task) =>
+        task.id === taskId ? { ...task, title: newTitle.trim() } : task
+      );
+      setTodos(updTodos);
+    },
+    [todos]
   );
 
+  // здесь должен быть useCallback, если передаешь функцию параметром в дочерние компоненты
   const deleteTask = (taskId: number) => {
-    setTodos(actualTodos =>
-      actualTodos.filter(task => task.id != taskId)
-    );
+    setTodos((actualTodos) => actualTodos.filter((task) => task.id != taskId));
   };
 
   const createTask = () => {
-    if (newTaskTitle.trim() === '') return;
+    if (newTaskTitle.trim() === "") return;
 
     const newTask = {
       id: Date.now(),
-      userId:1,
+      userId: 1,
       title: newTaskTitle,
       completed: false,
     };
 
-    setTodos(actualTodos => [newTask, ...actualTodos]);
-    setNewTaskTitle('');
+    setTodos((actualTodos) => [newTask, ...actualTodos]);
+    setNewTaskTitle("");
     setIsCreating(false);
   };
 
-  const handleCreateKeyDown = (
-    e:React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key ==='Enter') {
+  const handleCreateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
       createTask();
     }
   };
-
-
 
   if (isLoadingTasks)
     return <p className={classes["loading-message"]}>Загрузка контента...</p>;
@@ -102,23 +99,21 @@ export default function TasksFetch() {
       <div className={classes["create-task"]}>
         {isCreating ? (
           <input
-            type='text'
+            type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={handleCreateKeyDown}
-            placeholder='Введите задачу и нажмите Enter'
+            placeholder="Введите задачу и нажмите Enter"
             autoFocus
           />
         ) : (
-          <button onClick={() => setIsCreating(true)}>
-            + Добавить задачу
-          </button>
+          <button onClick={() => setIsCreating(true)}>+ Добавить задачу</button>
         )}
       </div>
-      <TaskList 
-        title="Активные" 
-        tasks={activeTasks} 
-        onToggle={toggleTask} 
+      <TaskList
+        title="Активные"
+        tasks={activeTasks}
+        onToggle={toggleTask}
         onUpdateTitle={updateTaskTitle}
         onDelete={deleteTask}
       />
