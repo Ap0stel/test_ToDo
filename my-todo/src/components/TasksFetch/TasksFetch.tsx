@@ -73,6 +73,7 @@ export default function TasksFetch() {
 
     const newTask = {
       id: Date.now(),
+      userId:1,
       title: newTaskTitle,
       completed: false,
     };
@@ -104,6 +105,7 @@ export default function TasksFetch() {
             type='text'
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
+            onKeyDown={handleCreateKeyDown}
             placeholder='Введите задачу и нажмите Enter'
             autoFocus
           />
