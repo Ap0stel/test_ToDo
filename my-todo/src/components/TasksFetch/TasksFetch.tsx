@@ -3,7 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import TaskList from "../TaskList/TaskList";
 import classes from "./TasksFetch.module.css";
 import { Todo } from "../../types";
-
+import {
+  fetchTodos,
+  createTodo,
+  updateTodo, 
+  deleteTodo,
+} from "../../api/todos";
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
@@ -13,9 +18,8 @@ export default function TasksFetch() {
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
 
   useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/todos")
-      .then((result) => result.json())
-      .then((toDos: Todo[]) => {
+    fetchTodos()
+      .then((toDos) => {
         setTodos(toDos.slice(0, 20));
         setIsLoadingTasks(false);
       })
@@ -40,53 +44,76 @@ export default function TasksFetch() {
   // иначе React будет считать, что проп toggleTask изменился, и это вызовет лишние перерисовки / эффекты / пересоздание подписок.
 
   const toggleTask = useCallback(
-    (taskId: number) => {
-      const updatedTodos = todos.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      );
+    async (taskId: number) => {
+      const task = todos.find((t) => t.id === taskId);
+      if (!task) return;
 
-      setTodos(updatedTodos);
-    },
+      try {
+        await updateTodo(taskId, {completed: !task.completed});
+
+        const updatedTodos = todos.map((t) => 
+          t.id === taskId ? {...t, completed: !t.completed} : t
+        );
+        setTodos(updatedTodos);  
+      } catch (error) {
+        console.error('Error', error);
+        setError('Error');
+      }
+    }, 
     [todos]
   );
 
   const updateTaskTitle = useCallback(
-    (taskId: number, newTitle: string) => {
+    async (taskId: number, newTitle: string) => {
       if (newTitle.trim() === "") {
         return;
       }
-
-      const updTodos = todos.map((task) =>
-        task.id === taskId ? { ...task, title: newTitle.trim() } : task
-      );
-      setTodos(updTodos);
+      
+      try {
+        await updateTodo(taskId, { title: newTitle.trim() });
+        const updTodos = todos.map((task) =>
+          task.id === taskId ? { ...task, title: newTitle.trim() } : task
+        );
+        setTodos(updTodos);
+      } catch (error) {
+        console.error("Error updating task title:", error);
+        setError("Ошибка при редактировании задачи");
+      }
     },
     [todos]
   );
 
-  // здесь должен быть useCallback, если передаешь функцию параметром в дочерние компоненты
-  const deleteTask = (taskId: number) => {
-    setTodos((actualTodos) => actualTodos.filter((task) => task.id != taskId));
-  };
 
-  const createTask = () => {
+  const deleteTask = useCallback(async (taskId: number) => {
+    try {
+      // Отправляем DELETE запрос на сервер
+      await deleteTodo(taskId);
+
+      // Удаляем из локального state
+      setTodos((actualTodos) => actualTodos.filter((task) => task.id !== taskId));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      setError("Ошибка при удалении задачи");
+    }
+  }, []);
+
+  const createTask = async () => {
     if (newTaskTitle.trim() === "") return;
-
-    const newTask = {
-      id: Date.now(),
-      userId: 1,
-      title: newTaskTitle,
-      completed: false,
-    };
-
-    setTodos((actualTodos) => [newTask, ...actualTodos]);
-    setNewTaskTitle("");
-    setIsCreating(false);
+    try {
+      const newTask = await createTodo(newTaskTitle.trim());
+      setTodos((actualTodos) => [newTask, ...actualTodos]);
+      setNewTaskTitle("");
+      setIsCreating(false);
+    } catch (error) {
+    console.error('Error creating task;', error);
+    setError('Error')
+    }
   };
-
-  const handleCreateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleCreateKeyDown = async (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Enter") {
-      createTask();
+      await createTask();
     }
   };
 
