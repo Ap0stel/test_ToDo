@@ -17,6 +17,8 @@ export default function TasksFetch() {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
 
+  const [newTaskCompleted, setNewTaskCompleted] = useState<boolean>(false);
+
   useEffect(() => {
     fetchTodos()
       .then((toDos) => {
@@ -49,12 +51,13 @@ export default function TasksFetch() {
       if (!task) return;
 
       try {
-        await updateTodo(taskId, {completed: !task.completed});
-
         const updatedTodos = todos.map((t) => 
           t.id === taskId ? {...t, completed: !t.completed} : t
         );
-        setTodos(updatedTodos);  
+        setTodos(updatedTodos);
+
+        await updateTodo(taskId, {completed: !task.completed});
+ 
       } catch (error) {
         console.error('Error', error);
         setError('Error');
@@ -70,10 +73,14 @@ export default function TasksFetch() {
       }
       
       try {
-        await updateTodo(taskId, { title: newTitle.trim() });
         const updTodos = todos.map((task) =>
           task.id === taskId ? { ...task, title: newTitle.trim() } : task
         );
+        setTodos(updTodos);
+        await updateTodo(taskId, { title: newTitle.trim() });
+        // const updTodos = todos.map((task) =>
+        //   task.id === taskId ? { ...task, title: newTitle.trim() } : task
+        // );
         setTodos(updTodos);
       } catch (error) {
         console.error("Error updating task title:", error);
@@ -100,7 +107,16 @@ export default function TasksFetch() {
   const createTask = async () => {
     if (newTaskTitle.trim() === "") return;
     try {
-      const newTask = await createTodo(newTaskTitle.trim());
+      const serverTask = await createTodo(
+        newTaskTitle.trim(),
+        newTaskCompleted
+      );
+
+      const newTask: Todo = {
+        ...serverTask, 
+        completed:newTaskCompleted,
+      };
+        
       setTodos((actualTodos) => [newTask, ...actualTodos]);
       setNewTaskTitle("");
       setIsCreating(false);
@@ -125,14 +141,24 @@ export default function TasksFetch() {
     <>
       <div className={classes["create-task"]}>
         {isCreating ? (
-          <input
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            onKeyDown={handleCreateKeyDown}
-            placeholder="Введите задачу и нажмите Enter"
-            autoFocus
-          />
+          <div>
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={handleCreateKeyDown}
+              placeholder="Введите задачу и нажмите Enter"
+              autoFocus
+            />
+
+            <select 
+              value={String(newTaskCompleted)}
+              onChange={(e) => setNewTaskCompleted(e.target.value === "true")}
+            >
+              <option value='false'>Активная</option>
+              <option value='true'>Завершена</option>
+            </select>
+          </div>
         ) : (
           <button onClick={() => setIsCreating(true)}>+ Добавить задачу</button>
         )}

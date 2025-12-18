@@ -20,7 +20,8 @@ export async function fetchTodos(): Promise<Todo[]> {
 
 export async function createTodo(
   title: string,
-  userId: number = 1
+  completed: boolean,
+  userId: number = 1,
 ): Promise<Todo> {
   const response = await fetch(`${API_BASE_URL}/todos`, {
     method: "POST",
@@ -30,7 +31,7 @@ export async function createTodo(
     body: JSON.stringify({
       userId,
       title,
-      completed: false,
+      completed,
     }),
   });
 
