@@ -6,9 +6,10 @@ import { Todo } from "../../types";
 import {
   fetchTodos,
   createTodo,
-  updateTodo, 
+  updateTodo,
   deleteTodo,
 } from "../../api/todos";
+import { Button, Stack } from "@mui/material";
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
@@ -51,18 +52,17 @@ export default function TasksFetch() {
       if (!task) return;
 
       try {
-        const updatedTodos = todos.map((t) => 
-          t.id === taskId ? {...t, completed: !t.completed} : t
+        const updatedTodos = todos.map((t) =>
+          t.id === taskId ? { ...t, completed: !t.completed } : t
         );
         setTodos(updatedTodos);
 
-        await updateTodo(taskId, {completed: !task.completed});
- 
+        await updateTodo(taskId, { completed: !task.completed });
       } catch (error) {
-        console.error('Error', error);
-        setError('Error');
+        console.error("Error", error);
+        setError("Error");
       }
-    }, 
+    },
     [todos]
   );
 
@@ -71,16 +71,15 @@ export default function TasksFetch() {
       if (newTitle.trim() === "") {
         return;
       }
-      
+
       try {
         const updTodos = todos.map((task) =>
           task.id === taskId ? { ...task, title: newTitle.trim() } : task
         );
         setTodos(updTodos);
+
         await updateTodo(taskId, { title: newTitle.trim() });
-        // const updTodos = todos.map((task) =>
-        //   task.id === taskId ? { ...task, title: newTitle.trim() } : task
-        // );
+
         setTodos(updTodos);
       } catch (error) {
         console.error("Error updating task title:", error);
@@ -90,14 +89,15 @@ export default function TasksFetch() {
     [todos]
   );
 
-
   const deleteTask = useCallback(async (taskId: number) => {
     try {
       // Отправляем DELETE запрос на сервер
       await deleteTodo(taskId);
 
       // Удаляем из локального state
-      setTodos((actualTodos) => actualTodos.filter((task) => task.id !== taskId));
+      setTodos((actualTodos) =>
+        actualTodos.filter((task) => task.id !== taskId)
+      );
     } catch (error) {
       console.error("Error deleting task:", error);
       setError("Ошибка при удалении задачи");
@@ -112,17 +112,12 @@ export default function TasksFetch() {
         newTaskCompleted
       );
 
-      const newTask: Todo = {
-        ...serverTask, 
-        completed:newTaskCompleted,
-      };
-        
-      setTodos((actualTodos) => [newTask, ...actualTodos]);
+      setTodos((actualTodos) => [serverTask, ...actualTodos]);
       setNewTaskTitle("");
       setIsCreating(false);
     } catch (error) {
-    console.error('Error creating task;', error);
-    setError('Error')
+      console.error("Error creating task;", error);
+      setError("Error");
     }
   };
   const handleCreateKeyDown = async (
@@ -151,32 +146,34 @@ export default function TasksFetch() {
               autoFocus
             />
 
-            <select 
+            <select
               value={String(newTaskCompleted)}
               onChange={(e) => setNewTaskCompleted(e.target.value === "true")}
             >
-              <option value='false'>Активная</option>
-              <option value='true'>Завершена</option>
+              <option value="false">Активная</option>
+              <option value="true">Завершена</option>
             </select>
           </div>
         ) : (
-          <button onClick={() => setIsCreating(true)}>+ Добавить задачу</button>
+          <Button onClick={() => setIsCreating(true)}>+ Добавить задачу</Button>
         )}
       </div>
-      <TaskList
-        title="Активные"
-        tasks={activeTasks}
-        onToggle={toggleTask}
-        onUpdateTitle={updateTaskTitle}
-        onDelete={deleteTask}
-      />
-      <TaskList
-        title="Завершенные"
-        tasks={completedTasks}
-        onToggle={toggleTask}
-        onUpdateTitle={updateTaskTitle}
-        onDelete={deleteTask}
-      />
+      <Stack direction="row">
+        <TaskList
+          title="Активные"
+          tasks={activeTasks}
+          onToggle={toggleTask}
+          onUpdateTitle={updateTaskTitle}
+          onDelete={deleteTask}
+        />
+        <TaskList
+          title="Завершенные"
+          tasks={completedTasks}
+          onToggle={toggleTask}
+          onUpdateTitle={updateTaskTitle}
+          onDelete={deleteTask}
+        />
+      </Stack>
     </>
   );
 }
