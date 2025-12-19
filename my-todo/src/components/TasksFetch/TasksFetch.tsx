@@ -9,11 +9,12 @@ import {
   updateTodo,
   deleteTodo,
 } from "../../api/todos";
-import { Button, Stack } from "@mui/material";
+import { Box, Button, Stack } from "@mui/material";
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [color, setColor] = useState<"red" | "green">("green");
 
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
@@ -48,6 +49,8 @@ export default function TasksFetch() {
 
   const toggleTask = useCallback(
     async (taskId: number) => {
+      setColor(color === "red" ? "green" : "red");
+
       const task = todos.find((t) => t.id === taskId);
       if (!task) return;
 
@@ -63,7 +66,7 @@ export default function TasksFetch() {
         setError("Error");
       }
     },
-    [todos]
+    [color, todos]
   );
 
   const updateTaskTitle = useCallback(
@@ -155,9 +158,62 @@ export default function TasksFetch() {
             </select>
           </div>
         ) : (
-          <Button onClick={() => setIsCreating(true)}>+ Добавить задачу</Button>
+          <>
+            <Button variant="text" sx={{ color }}>
+              Text
+            </Button>
+            <Button variant="contained" size="small" sx={{ color }}>
+              Contained
+            </Button>
+            <Button variant="outlined" size="small" sx={{ color }}>
+              Outlined
+            </Button>
+
+            <Button sx={{ color }} color="secondary">
+              Secondary
+            </Button>
+            <Button
+              sx={{ color }}
+              variant="contained"
+              size="large"
+              color="success"
+            >
+              Success
+            </Button>
+            <Button
+              sx={{ color }}
+              variant="outlined"
+              size="large"
+              color="error"
+            >
+              Error
+            </Button>
+
+            <Button sx={{ color }} onClick={() => setIsCreating(true)}>
+              + Добавить задачу
+            </Button>
+          </>
         )}
       </div>
+      <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+        my box
+      </Box>
+
+      <Stack
+        sx={{ border: "3px solid red", width: 300, height: 300 }}
+        spacing={4}
+      >
+        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+          my box 1
+        </Box>
+        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+          my box 2
+        </Box>
+        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+          my box 3
+        </Box>
+      </Stack>
+
       <Stack direction="row">
         <TaskList
           title="Активные"
