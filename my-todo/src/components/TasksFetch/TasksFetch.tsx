@@ -115,12 +115,12 @@ export default function TasksFetch() {
         newTaskCompleted
       );
 
-      const newTask: Todo = {
-        ...serverTask, 
-        completed:newTaskCompleted,
-      };
+      // const newTask: Todo = {
+      //   ...serverTask, 
+      //   completed:newTaskCompleted,
+      // };
         
-      setTodos((actualTodos) => [newTask, ...actualTodos]);
+      setTodos((actualTodos) => [serverTask, ...actualTodos]);
       setNewTaskTitle("");
       setIsCreating(false);
     } catch (error) {
