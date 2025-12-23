@@ -6,13 +6,15 @@ import { Todo } from "../../types";
 import {
   fetchTodos,
   createTodo,
-  updateTodo, 
+  updateTodo,
   deleteTodo,
 } from "../../api/todos";
+import { Box, Button, Stack } from "@mui/material";
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [color, setColor] = useState<"red" | "green">("green");
 
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
@@ -47,23 +49,24 @@ export default function TasksFetch() {
 
   const toggleTask = useCallback(
     async (taskId: number) => {
+      setColor(color === "red" ? "green" : "red");
+
       const task = todos.find((t) => t.id === taskId);
       if (!task) return;
 
       try {
-        const updatedTodos = todos.map((t) => 
-          t.id === taskId ? {...t, completed: !t.completed} : t
+        const updatedTodos = todos.map((t) =>
+          t.id === taskId ? { ...t, completed: !t.completed } : t
         );
         setTodos(updatedTodos);
 
-        await updateTodo(taskId, {completed: !task.completed});
- 
+        await updateTodo(taskId, { completed: !task.completed });
       } catch (error) {
-        console.error('Error', error);
-        setError('Error');
+        console.error("Error", error);
+        setError("Error");
       }
-    }, 
-    [todos]
+    },
+    [color, todos]
   );
 
   const updateTaskTitle = useCallback(
@@ -71,16 +74,15 @@ export default function TasksFetch() {
       if (newTitle.trim() === "") {
         return;
       }
-      
+
       try {
         const updTodos = todos.map((task) =>
           task.id === taskId ? { ...task, title: newTitle.trim() } : task
         );
         setTodos(updTodos);
+
         await updateTodo(taskId, { title: newTitle.trim() });
-        // const updTodos = todos.map((task) =>
-        //   task.id === taskId ? { ...task, title: newTitle.trim() } : task
-        // );
+
         setTodos(updTodos);
       } catch (error) {
         console.error("Error updating task title:", error);
@@ -90,14 +92,15 @@ export default function TasksFetch() {
     [todos]
   );
 
-
   const deleteTask = useCallback(async (taskId: number) => {
     try {
       // Отправляем DELETE запрос на сервер
       await deleteTodo(taskId);
 
       // Удаляем из локального state
-      setTodos((actualTodos) => actualTodos.filter((task) => task.id !== taskId));
+      setTodos((actualTodos) =>
+        actualTodos.filter((task) => task.id !== taskId)
+      );
     } catch (error) {
       console.error("Error deleting task:", error);
       setError("Ошибка при удалении задачи");
@@ -112,17 +115,17 @@ export default function TasksFetch() {
         newTaskCompleted
       );
 
-      // const newTask: Todo = {
-      //   ...serverTask, 
-      //   completed:newTaskCompleted,
-      // };
+      const newTask: Todo = {
+        ...serverTask, 
+        completed:newTaskCompleted,
+      };
         
-      setTodos((actualTodos) => [serverTask, ...actualTodos]);
+      setTodos((actualTodos) => [newTask, ...actualTodos]);
       setNewTaskTitle("");
       setIsCreating(false);
     } catch (error) {
-    console.error('Error creating task;', error);
-    setError('Error')
+      console.error("Error creating task;", error);
+      setError("Error");
     }
   };
   const handleCreateKeyDown = async (
@@ -151,32 +154,87 @@ export default function TasksFetch() {
               autoFocus
             />
 
-            <select 
+            <select
               value={String(newTaskCompleted)}
               onChange={(e) => setNewTaskCompleted(e.target.value === "true")}
             >
-              <option value='false'>Активная</option>
-              <option value='true'>Завершена</option>
+              <option value="false">Активная</option>
+              <option value="true">Завершена</option>
             </select>
           </div>
         ) : (
-          <button onClick={() => setIsCreating(true)}>+ Добавить задачу</button>
+          <>
+            <Button variant="text" sx={{ color }}>
+              Text
+            </Button>
+            <Button variant="contained" size="small" sx={{ color }}>
+              Contained
+            </Button>
+            <Button variant="outlined" size="small" sx={{ color }}>
+              Outlined
+            </Button>
+
+            <Button sx={{ color }} color="secondary">
+              Secondary
+            </Button>
+            <Button
+              sx={{ color }}
+              variant="contained"
+              size="large"
+              color="success"
+            >
+              Success
+            </Button>
+            <Button
+              sx={{ color }}
+              variant="outlined"
+              size="large"
+              color="error"
+            >
+              Error
+            </Button>
+
+            <Button sx={{ color }} onClick={() => setIsCreating(true)}>
+              + Добавить задачу
+            </Button>
+          </>
         )}
       </div>
-      <TaskList
-        title="Активные"
-        tasks={activeTasks}
-        onToggle={toggleTask}
-        onUpdateTitle={updateTaskTitle}
-        onDelete={deleteTask}
-      />
-      <TaskList
-        title="Завершенные"
-        tasks={completedTasks}
-        onToggle={toggleTask}
-        onUpdateTitle={updateTaskTitle}
-        onDelete={deleteTask}
-      />
+      <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+        my box
+      </Box>
+
+      <Stack
+        sx={{ border: "3px solid red", width: 300, height: 300 }}
+        spacing={4}
+      >
+        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+          my box 1
+        </Box>
+        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+          my box 2
+        </Box>
+        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
+          my box 3
+        </Box>
+      </Stack>
+
+      <Stack direction="row">
+        <TaskList
+          title="Активные"
+          tasks={activeTasks}
+          onToggle={toggleTask}
+          onUpdateTitle={updateTaskTitle}
+          onDelete={deleteTask}
+        />
+        <TaskList
+          title="Завершенные"
+          tasks={completedTasks}
+          onToggle={toggleTask}
+          onUpdateTitle={updateTaskTitle}
+          onDelete={deleteTask}
+        />
+      </Stack>
     </>
   );
 }
