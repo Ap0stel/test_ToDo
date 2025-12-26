@@ -1,11 +1,12 @@
 import "./App.css";
 import TasksFetch from "./components/TasksFetch/TasksFetch";
+import { Container } from "@mui/material";
 
 function App() {
   return (
-    <div className="main-wrapper">
+    <Container maxWidth='sm'>
       <TasksFetch />
-    </div>
+    </Container>
   );
 }
 

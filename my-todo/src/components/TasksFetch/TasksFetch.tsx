@@ -9,7 +9,7 @@ import {
   updateTodo,
   deleteTodo,
 } from "../../api/todos";
-import { Box, Button, Stack } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, MenuItem, Select, Stack, TextField } from "@mui/material";
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
@@ -24,6 +24,7 @@ export default function TasksFetch() {
   useEffect(() => {
     fetchTodos()
       .then((toDos) => {
+        console.log(toDos);
         setTodos(toDos.slice(0, 20));
         setIsLoadingTasks(false);
       })
@@ -136,88 +137,64 @@ export default function TasksFetch() {
     }
   };
 
-  if (isLoadingTasks)
-    return <p className={classes["loading-message"]}>Загрузка контента...</p>;
-  if (error) return <p>{error}</p>;
+  if (isLoadingTasks) {
+    return (
+      <Box display='flex' justifyContent='center' mt={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  if (error) {
+    return (
+      <Alert severity="error">
+        {error}
+      </Alert>
+    );
+  }
 
   return (
     <>
-      <div className={classes["create-task"]}>
+      <Box mb={3}>
         {isCreating ? (
-          <div>
-            <input
-              type="text"
+          <Stack direction='row' spacing={2} alignItems='center'>
+            <TextField
+              label='Новая задача'
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={handleCreateKeyDown}
-              placeholder="Введите задачу и нажмите Enter"
+              size="small"
               autoFocus
             />
 
-            <select
-              value={String(newTaskCompleted)}
-              onChange={(e) => setNewTaskCompleted(e.target.value === "true")}
+            <Select 
+              size="small"
+              value={newTaskCompleted}
+              onChange={(e) => setNewTaskCompleted(Boolean(e.target.value))}
             >
-              <option value="false">Активная</option>
-              <option value="true">Завершена</option>
-            </select>
-          </div>
+              <MenuItem value='false'>Активная</MenuItem>
+              <MenuItem value='true'>Завершённая</MenuItem>
+            </Select>
+
+            <Button variant='contained' onClick={createTask}>
+              Создать
+            </Button>
+
+            <Button
+            variant="text"
+            color="inherit"
+            onClick={() => setIsCreating(false)}
+            >
+              Отмена
+            </Button>
+          </Stack>
         ) : (
-          <>
-            <Button variant="text" sx={{ color }}>
-              Text
-            </Button>
-            <Button variant="contained" size="small" sx={{ color }}>
-              Contained
-            </Button>
-            <Button variant="outlined" size="small" sx={{ color }}>
-              Outlined
-            </Button>
-
-            <Button sx={{ color }} color="secondary">
-              Secondary
-            </Button>
-            <Button
-              sx={{ color }}
-              variant="contained"
-              size="large"
-              color="success"
-            >
-              Success
-            </Button>
-            <Button
-              sx={{ color }}
-              variant="outlined"
-              size="large"
-              color="error"
-            >
-              Error
-            </Button>
-
-            <Button sx={{ color }} onClick={() => setIsCreating(true)}>
-              + Добавить задачу
-            </Button>
-          </>
+          <Button
+            variant="contained"
+            onClick={() => setIsCreating(true)}
+          >
+            + Добавить задачу
+          </Button>
         )}
-      </div>
-      <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
-        my box
       </Box>
-
-      <Stack
-        sx={{ border: "3px solid red", width: 300, height: 300 }}
-        spacing={4}
-      >
-        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
-          my box 1
-        </Box>
-        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
-          my box 2
-        </Box>
-        <Box sx={{ border: "3px solid red", width: 100, height: 100 }}>
-          my box 3
-        </Box>
-      </Stack>
 
       <Stack direction="row">
         <TaskList
