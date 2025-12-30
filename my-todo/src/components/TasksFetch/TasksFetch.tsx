@@ -26,7 +26,7 @@ export default function TasksFetch() {
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
   
   const [users, setUsers] = useState<User[]>([]);
-  const [newTaskUserId, setnewTaskUserId] = useState<number | ''> ('');
+  const [newTaskUserId, setnewTaskUserId] = useState<number | undefined> (undefined);
 
 useEffect(() => {
   Promise.all([fetchTodos(), fetchUsers()])
@@ -46,6 +46,16 @@ useEffect(() => {
     .catch(() => setError("Ошибка в получении контента"))
     .finally(() => setIsLoadingTasks(false));
 }, []);
+
+  const activeTasks = useMemo(
+    () => todos.filter((task) => !task.completed),
+    [todos]
+  );
+
+  const completedTasks = useMemo(
+    () => todos.filter((task) => task.completed),
+    [todos]
+  );
 
 
   // коллбеки нужно передавать в дочерние компоненты, используя useCallback. в таком случае
@@ -118,19 +128,20 @@ useEffect(() => {
   const createTask = async () => {
     if (newTaskTitle.trim() === "") return;
     try {
-      const serverTask = await createTodo(
-        newTaskTitle.trim(),
-        newTaskCompleted === 'completed'
+      if (newTaskUserId) {
+        const serverTask = await createTodo(
+          newTaskTitle.trim(),
+          newTaskCompleted === 'completed',
+          newTaskUserId,
       );
-
       // const newTask: Todo = {
       //   ...serverTask, 
       //   completed:newTaskCompleted,
       // };
-        
-      setTodos((actualTodos) => [serverTask, ...actualTodos]);
-      setNewTaskTitle("");
-      setIsCreating(false);
+        setTodos((actualTodos) => [serverTask, ...actualTodos]);
+        setNewTaskTitle("");
+        setIsCreating(false);
+      }
     } catch (error) {
       console.error("Error creating task;", error);
       setError("Error");
@@ -158,7 +169,9 @@ useEffect(() => {
       </Alert>
     );
   }
-
+  console.log(newTaskUserId);
+  console.log(activeTasks);
+ 
   return (
     <>
       <Box mb={3}>
@@ -187,7 +200,10 @@ useEffect(() => {
               onChange={(e) => setnewTaskUserId(Number(e.target.value))}
               displayEmpty
             >
-              <?>!!
+              <MenuItem sx={{display:'none'}} value={undefined}>Выберите пользователя</MenuItem>
+              {users.map(user => (
+                <MenuItem key={user.id} value={user.id}>{user.name}</MenuItem>
+              ))}
             </Select>
 
             <Button variant='contained' onClick={createTask}>

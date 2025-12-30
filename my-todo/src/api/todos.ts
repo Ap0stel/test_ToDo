@@ -21,7 +21,7 @@ export async function fetchTodos(): Promise<Todo[]> {
 export async function createTodo(
   title: string,
   completed: boolean,
-  userId: number = 1,
+  userId: number,
 ): Promise<Todo> {
   const response = await fetch(`${API_BASE_URL}/todos`, {
     method: "POST",
