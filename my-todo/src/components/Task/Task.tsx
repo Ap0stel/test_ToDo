@@ -54,7 +54,8 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        p: 1.5,
+        px: 2,
+        py: 1,
         borderBottom: '1px solid #e0e0e0',
         opacity: isDeleting ? 0.5 : 1,
         pointerEvents: isDeleting ? 'none' : 'auto',
@@ -65,24 +66,34 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
         onChange={() => onToggle(task.id)}
         disabled={isDeleting}
       />
+      <Box sx={{flexGrow: 1}}>
+        {isEditing ? (
+            <TextField 
+              size="small"
+              value={editingTitle}
+              onChange={(e) => setEditingTitle(e.target.value)}
+              onBlur={handleSaveTitle}
+              autoFocus
+              fullWidth
+            />
+          ) : (
+          <Box display='flex' alignItems='center' gap={2}>
+            <Typography
+              sx={{flexGrow: 1, cursor: 'pointer'}}
+              onClick={() => setIsEditing(true)}
+            >
+              {task.title}
+            </Typography>
 
-      {isEditing ? (
-        <TextField 
-          size="small"
-          value={editingTitle}
-          onChange={(e) => setEditingTitle(e.target.value)}
-          onBlur={handleSaveTitle}
-          autoFocus
-          fullWidth
-        />
-      ) : (
-        <Typography
-          sx={{flexGrow: 1, cursor: 'pointer'}}
-          onClick={() => setIsEditing(true)}
-        >
-          {task.title}
-        </Typography>
-      )}
+            <Typography
+              sx={{flexGrow: 1, cursor: 'pointer'}}
+              onClick={() => setIsEditing(true)}
+            >
+              {task.user?.name} · {task.user?.email}
+            </Typography>
+          </Box>
+        )}
+      </Box>
 
       <IconButton
         onClick={() => onDelete(task.id)}

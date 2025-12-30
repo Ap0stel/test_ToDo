@@ -35,7 +35,7 @@ useEffect(() => {
         usersData.map((u) => [u.id, u])
       );
 
-      const newTodos = todosData.slice(0, 20).map((todo) => ({
+      const newTodos = todosData.map((todo) => ({
         ...todo,
         user: usersMap.get(todo.userId),
       }));
@@ -176,7 +176,7 @@ useEffect(() => {
     <>
       <Box mb={3}>
         {isCreating ? (
-          <Stack direction='row' spacing={2} alignItems='center'>
+          <Stack direction='row' spacing={3} alignItems='flex-start'>
             <TextField
               label='Новая задача'
               value={newTaskTitle}

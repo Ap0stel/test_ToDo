@@ -1,7 +1,6 @@
 import Task from "../Task/Task";
-import classes from "./TaskList.module.css";
 import { Todo } from "../../types";
-
+import {Box, Typography } from "@mui/material";
 interface TaskListProps {
   tasks: Todo[];
   title: string;
@@ -21,21 +20,48 @@ export default function TaskList({
 }: Readonly<TaskListProps>) {
   console.log("Tasks: ", tasks);
   return (
-    <div className={classes.wraper}>
-      <div className={classes["list-title"]}>{title}</div>
-      <div className={classes["task-list"]}>
-        {tasks.length
-          ? tasks.map((task) => {
-              return <Task task={task}
-                key={task.id} 
-                onToggle={onToggle} 
-                onUpdateTitle={onUpdateTitle}
-                onDelete={onDelete}
-                deletingTaskId={deletingTaskId}
-                />;
-            })
-          : "Список задач пуст"}
-      </div>
-    </div>
+    <Box
+      sx={{
+        flex: 1,
+        minWidth: 0,
+        border: "1px solid #e0e0e0",
+        borderRadius: 1,
+        overflow: "hidden",
+        bgcolor: "background.paper",
+      }}
+    >
+      <Typography
+        variant="h6"
+        sx={{
+          px: 2,
+          py: 1,
+          borderBottom: "1px solid #e0e0e0",
+        }}
+      >
+        {title}
+      </Typography>
+
+      <Box>
+        {tasks.length ? (
+          tasks.map((task) => (
+            <Task
+              key={task.id}
+              task={task}
+              onToggle={onToggle}
+              onUpdateTitle={onUpdateTitle}
+              onDelete={onDelete}
+              deletingTaskId={deletingTaskId}
+            />
+          ))
+        ) : (
+          <Typography
+            sx={{ p: 2 }}
+            color="text.secondary"
+          >
+            Список задач пуст
+          </Typography>
+        )}
+      </Box>
+    </Box>
   );
 }
