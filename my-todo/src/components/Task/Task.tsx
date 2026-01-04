@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Todo } from "../../types";
 import {
-  Box, 
+  Box,
   Checkbox,
-  IconButton, 
+  IconButton,
   TextField,
   Typography,
   CircularProgress,
@@ -14,51 +14,42 @@ interface TaskProps {
   task: Todo;
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
-  onDelete: (taskId:number) => void;
+  onDelete: (taskId: number) => void;
   deletingTaskId: number | null;
 }
 
-function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Readonly<TaskProps>) {
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingTitle, setEditingTitle] = useState(task.title);
+function Task({
+  task,
+  onToggle,
+  onUpdateTitle,
+  onDelete,
+  deletingTaskId,
+}: Readonly<TaskProps>) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(task.title);
 
-    const isDeleting = deletingTaskId === task.id;
+  const isDeleting = deletingTaskId === task.id;
 
-    const handleStartEditing = () => {
-        setIsEditing(true);
-        setEditingTitle(task.title);
-    };
-    const handleSaveTitle = () => {
-        onUpdateTitle(task.id, editingTitle);
-        setIsEditing(false);
-    };
-    const handleCancelEditing = () => {
-        setEditingTitle(task.title);
-        setIsEditing(false);
-    };
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        handleSaveTitle();
-      } else if (e.key === 'Escape') {
-        handleCancelEditing();
-      }
-    };
+  const handleSaveTitle = () => {
+    onUpdateTitle(task.id, editingTitle);
+    setIsEditing(false);
+  };
 
-    useEffect(() => {
-      setEditingTitle(task.title);
-    }, [task.title]);
-  
+  useEffect(() => {
+    setEditingTitle(task.title);
+  }, [task.title]);
+
   return (
-    <Box 
+    <Box
       sx={{
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 2,
         px: 2,
         py: 1,
-        borderBottom: '1px solid #e0e0e0',
+        borderBottom: "1px solid #e0e0e0",
         opacity: isDeleting ? 0.5 : 1,
-        pointerEvents: isDeleting ? 'none' : 'auto',
+        pointerEvents: isDeleting ? "none" : "auto",
       }}
     >
       <Checkbox
@@ -66,27 +57,26 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
         onChange={() => onToggle(task.id)}
         disabled={isDeleting}
       />
-      <Box sx={{flexGrow: 1}}>
+      <Box sx={{ flexGrow: 1 }}>
         {isEditing ? (
-            <TextField 
-              size="small"
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onBlur={handleSaveTitle}
-              autoFocus
-              fullWidth
-            />
-          ) : (
-          <Box display='flex' alignItems='center' gap={2}>
+          <TextField
+            size="small"
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            onBlur={handleSaveTitle}
+            fullWidth
+          />
+        ) : (
+          <Box display="flex" alignItems="center" gap={2}>
             <Typography
-              sx={{flexGrow: 1, cursor: 'pointer'}}
+              sx={{ flexGrow: 1, cursor: "pointer" }}
               onClick={() => setIsEditing(true)}
             >
               {task.title}
             </Typography>
 
             <Typography
-              sx={{flexGrow: 1, cursor: 'pointer'}}
+              sx={{ flexGrow: 1, cursor: "pointer" }}
               onClick={() => setIsEditing(true)}
             >
               {task.user?.name} · {task.user?.email}
@@ -98,12 +88,12 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
       <IconButton
         onClick={() => onDelete(task.id)}
         disabled={isDeleting}
-        color='error'
+        color="error"
       >
         {isDeleting ? <CircularProgress size={18} /> : <Delete />}
       </IconButton>
     </Box>
   );
-}            
+}
 
 export default Task;
