@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { Todo } from "../../types/index";
 import { User } from "../../types/index";
 import {
-  Box, 
+  Box,
   Checkbox,
-  IconButton, 
+  IconButton,
   TextField,
   Typography,
   CircularProgress,
@@ -16,7 +16,7 @@ interface TaskProps {
   users: User[];
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
-  onDelete: (taskId:number) => void;
+  onDelete: (taskId: number) => void;
   deletingTaskId: number | null;
 }
 
@@ -24,7 +24,7 @@ function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, 
     const [isEditing, setIsEditing] = useState(false);
     const [editingTitle, setEditingTitle] = useState(task.title);
 
-    const isDeleting = deletingTaskId === task.id;
+  const isDeleting = deletingTaskId === task.id;
 
     const user = useMemo(
       () => users.find(u => u.id === task.userId),
@@ -56,16 +56,16 @@ function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, 
     }, [task.title]);
   console.log('users in Task: ', users);
   return (
-    <Box 
+    <Box
       sx={{
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 2,
         px: 2,
         py: 1,
-        borderBottom: '1px solid #e0e0e0',
+        borderBottom: "1px solid #e0e0e0",
         opacity: isDeleting ? 0.5 : 1,
-        pointerEvents: isDeleting ? 'none' : 'auto',
+        pointerEvents: isDeleting ? "none" : "auto",
       }}
     >
       <Checkbox
@@ -75,18 +75,17 @@ function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, 
       />
       <Box sx={{flexGrow: 1, minWidth: 0}}>
         {isEditing ? (
-            <TextField 
-              size="small"
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onBlur={handleSaveTitle}
-              autoFocus
-              fullWidth
-            />
-          ) : (
-          <Box display='flex' alignItems='center' gap={2}>
+          <TextField
+            size="small"
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            onBlur={handleSaveTitle}
+            fullWidth
+          />
+        ) : (
+          <Box display="flex" alignItems="center" gap={2}>
             <Typography
-              sx={{flexGrow: 1, cursor: 'pointer'}}
+              sx={{ flexGrow: 1, cursor: "pointer" }}
               onClick={() => setIsEditing(true)}
             >
               {task.title}
@@ -116,12 +115,12 @@ function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, 
       <IconButton
         onClick={() => onDelete(task.id)}
         disabled={isDeleting}
-        color='error'
+        color="error"
       >
         {isDeleting ? <CircularProgress size={18} /> : <Delete />}
       </IconButton>
     </Box>
   );
-}            
+}
 
 export default Task;

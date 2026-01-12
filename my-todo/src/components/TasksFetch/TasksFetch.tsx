@@ -8,7 +8,16 @@ import {
   updateTodo,
   deleteTodo,
 } from "../../api/todos";
-import { Alert, Box, Button, CircularProgress, MenuItem, Select, Stack, TextField } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { User } from "../../types/index";
 import { fetchUsers } from "../../api/users";
 
@@ -21,12 +30,14 @@ export default function TasksFetch() {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
 
-  const [newTaskCompleted, setNewTaskCompleted] = useState<string>('progress');
+  const [newTaskCompleted, setNewTaskCompleted] = useState<string>("progress");
 
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
-  
+
   const [users, setUsers] = useState<User[]>([]);
-  const [newTaskUserId, setnewTaskUserId] = useState<number | undefined> (undefined);
+  const [newTaskUserId, setnewTaskUserId] = useState<number | undefined>(
+    undefined
+  );
 
 useEffect(() => {
   Promise.all([fetchTodos(), fetchUsers()])
@@ -47,7 +58,6 @@ useEffect(() => {
     () => todos.filter((task) => task.completed),
     [todos]
   );
-
 
   // коллбеки нужно передавать в дочерние компоненты, используя useCallback. в таком случае
   // ссылка на функцию не будет меняться на каждом рендере
@@ -122,13 +132,13 @@ useEffect(() => {
       if (newTaskUserId) {
         const serverTask = await createTodo(
           newTaskTitle.trim(),
-          newTaskCompleted === 'completed',
-          newTaskUserId,
-      );
-      // const newTask: Todo = {
-      //   ...serverTask, 
-      //   completed:newTaskCompleted,
-      // };
+          newTaskCompleted === "completed",
+          newTaskUserId
+        );
+        // const newTask: Todo = {
+        //   ...serverTask,
+        //   completed:newTaskCompleted,
+        // };
         setTodos((actualTodos) => [serverTask, ...actualTodos]);
         setNewTaskTitle("");
         setIsCreating(false);
@@ -138,82 +148,72 @@ useEffect(() => {
       setError("Error");
     }
   };
-  const handleCreateKeyDown = async (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === "Enter") {
-      await createTask();
-    }
-  };
 
   if (isLoadingTasks) {
     return (
-      <Box display='flex' justifyContent='center' mt={4}>
+      <Box display="flex" justifyContent="center" mt={4}>
         <CircularProgress />
       </Box>
     );
   }
   if (error) {
-    return (
-      <Alert severity="error">
-        {error}
-      </Alert>
-    );
+    return <Alert severity="error">{error}</Alert>;
   }
   console.log(newTaskUserId);
   console.log(activeTasks);
- 
+
   return (
     <>
       <Box mb={3}>
         {isCreating ? (
-          <Stack direction='row' spacing={3} alignItems='flex-start'>
+          <Stack direction="row" spacing={3} alignItems="flex-start">
             <TextField
-              label='Новая задача'
+              label="Новая задача"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               size="small"
               autoFocus
             />
 
-            <Select 
+            <Select
               size="small"
               value={newTaskCompleted}
               onChange={(e) => setNewTaskCompleted(e.target.value)}
             >
-              <MenuItem value='progress'>Активная</MenuItem>
-              <MenuItem value='completed'>Завершённая</MenuItem>
+              <MenuItem value="progress">Активная</MenuItem>
+              <MenuItem value="completed">Завершённая</MenuItem>
             </Select>
 
-            <Select 
+            <Select
               size="small"
               value={newTaskUserId}
               onChange={(e) => setnewTaskUserId(Number(e.target.value))}
               displayEmpty
             >
-              <MenuItem sx={{display:'none'}} value={undefined}>Выберите пользователя</MenuItem>
-              {users.map(user => (
-                <MenuItem key={user.id} value={user.id}>{user.name}</MenuItem>
+              <MenuItem sx={{ display: "none" }} value={undefined}>
+                Выберите пользователя
+              </MenuItem>
+              {users.map((user) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.name}
+                </MenuItem>
               ))}
             </Select>
 
-            <Button variant='contained' onClick={createTask}>
+            <Button variant="contained" onClick={createTask}>
               Создать
             </Button>
 
             <Button
-            variant="text"
-            color="inherit"
-            onClick={() => setIsCreating(false)}
+              variant="text"
+              color="inherit"
+              onClick={() => setIsCreating(false)}
             >
               Отмена
             </Button>
           </Stack>
         ) : (
-          <Button
-            variant="contained"
-            onClick={() => setIsCreating(true)}
-          >
+          <Button variant="contained" onClick={() => setIsCreating(true)}>
             + Добавить задачу
           </Button>
         )}
