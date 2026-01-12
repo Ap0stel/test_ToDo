@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Todo } from "../../types";
+import { useState, useEffect, useMemo } from "react";
+import { Todo } from "../../types/index";
+import { User } from "../../types/index";
 import {
   Box, 
   Checkbox,
@@ -12,17 +13,23 @@ import { Delete, Opacity } from "@mui/icons-material";
 
 interface TaskProps {
   task: Todo;
+  users: User[];
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
   onDelete: (taskId:number) => void;
   deletingTaskId: number | null;
 }
 
-function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Readonly<TaskProps>) {
+function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Readonly<TaskProps>) {
     const [isEditing, setIsEditing] = useState(false);
     const [editingTitle, setEditingTitle] = useState(task.title);
 
     const isDeleting = deletingTaskId === task.id;
+
+    const user = useMemo(
+      () => users.find(u => u.id === task.userId),
+      [users, task.userId]
+    );
 
     const handleStartEditing = () => {
         setIsEditing(true);
@@ -47,7 +54,7 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
     useEffect(() => {
       setEditingTitle(task.title);
     }, [task.title]);
-  
+  console.log('users in Task: ', users);
   return (
     <Box 
       sx={{
@@ -66,7 +73,7 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
         onChange={() => onToggle(task.id)}
         disabled={isDeleting}
       />
-      <Box sx={{flexGrow: 1}}>
+      <Box sx={{flexGrow: 1, minWidth: 0}}>
         {isEditing ? (
             <TextField 
               size="small"
@@ -86,10 +93,21 @@ function Task({ task, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Read
             </Typography>
 
             <Typography
-              sx={{flexGrow: 1, cursor: 'pointer'}}
+              sx={{
+                maxWidth: 240,
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                wordBreak: 'break-word',
+                flexShrink: 1,
+              }}
               onClick={() => setIsEditing(true)}
             >
-              {task.user?.name} · {task.user?.email}
+              {user
+                ? `${user.name} · ${user.email}`
+                : 'Исполнитель не назначен'}
             </Typography>
           </Box>
         )}

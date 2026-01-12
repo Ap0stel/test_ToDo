@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TaskList from "../TaskList/TaskList";
-import { Todo } from "../../types";
+import { Todo } from "../../types/index";
 import {
   fetchTodos,
   createTodo,
@@ -31,17 +31,8 @@ export default function TasksFetch() {
 useEffect(() => {
   Promise.all([fetchTodos(), fetchUsers()])
     .then(([todosData, usersData]) => {
-      const usersMap = new Map(
-        usersData.map((u) => [u.id, u])
-      );
-
-      const newTodos = todosData.map((todo) => ({
-        ...todo,
-        user: usersMap.get(todo.userId),
-      }));
-
       setUsers(usersData);
-      setTodos(newTodos);
+      setTodos(todosData);
     })
     .catch(() => setError("Ошибка в получении контента"))
     .finally(() => setIsLoadingTasks(false));
@@ -232,6 +223,7 @@ useEffect(() => {
         <TaskList
           title="Активные"
           tasks={activeTasks}
+          users={users}
           onToggle={toggleTask}
           onUpdateTitle={updateTaskTitle}
           onDelete={deleteTask}
@@ -240,6 +232,7 @@ useEffect(() => {
         <TaskList
           title="Завершенные"
           tasks={completedTasks}
+          users={users}
           onToggle={toggleTask}
           onUpdateTitle={updateTaskTitle}
           onDelete={deleteTask}

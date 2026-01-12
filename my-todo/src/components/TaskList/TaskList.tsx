@@ -4,6 +4,7 @@ import {Box, Typography } from "@mui/material";
 interface TaskListProps {
   tasks: Todo[];
   title: string;
+  users: User[];
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
   onDelete: (taskId: number) => void;
@@ -13,6 +14,7 @@ interface TaskListProps {
 export default function TaskList({
   tasks,
   title,
+  users,
   onToggle,
   onUpdateTitle,
   onDelete,
@@ -47,6 +49,7 @@ export default function TaskList({
             <Task
               key={task.id}
               task={task}
+              users={users}
               onToggle={onToggle}
               onUpdateTitle={onUpdateTitle}
               onDelete={onDelete}
