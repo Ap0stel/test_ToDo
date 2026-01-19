@@ -1,4 +1,7 @@
+import { Todo } from "../types";
+
 const API_BASE_URL = "https://jsonplaceholder.typicode.com";
+
 
 export interface TodoApiResponse {
   userId: number; 
@@ -7,13 +10,7 @@ export interface TodoApiResponse {
   completed: boolean;
 }
 
-export interface Todo {
-  userId: number; // 
-  id: number; 
-  title: string; 
-  columId: string;
-  user?: User;
-}
+
 export async function fetchTodos(): Promise<TodoApiResponse[]> {
 
   const response = await fetch(`${API_BASE_URL}/todos`);

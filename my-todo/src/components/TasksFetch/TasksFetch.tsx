@@ -41,7 +41,7 @@ export default function TasksFetch() {
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
 
   const [users, setUsers] = useState<User[]>([]);
-  const [newTaskUserId, setnewTaskUserId] = useState<number | undefined>(
+  const [newTaskUserId, setNewTaskUserId] = useState<number | undefined>(
     undefined
   );
 
@@ -65,11 +65,11 @@ useEffect(() => {
     .finally(() => setIsLoadingTasks(false));
 }, []);
 
-useEffect(() => {
-  if (columns.length && newTaskColumnId === null) {
-    setNewTaskColumnId(columns[0].id);
-  }
-}, [columns]);
+// useEffect(() => {
+//   if (columns.length && newTaskColumnId === null) {
+//     setNewTaskColumnId(columns[0].id);
+//   }
+// }, [columns]);
 
   const activeTasks = useMemo(
     () => todos.filter((task) => task.columnId === 'progress'),
@@ -163,13 +163,15 @@ useEffect(() => {
         newTaskUserId
         );
 
-        const appTask = {
+        const appTask: Todo = {
           ...serverTask,
           columnId: column.id,
-        } as Todo
+        }
 
         setTodos((actualTodos) => [appTask, ...actualTodos]);
         setNewTaskTitle("");
+        setnewTaskUserId(undefined);
+        setNewTaskColumnId(null);
         setIsCreating(false);
     }
       catch (error) {
@@ -218,7 +220,7 @@ useEffect(() => {
             <Select
               size="small"
               value={newTaskUserId}
-              onChange={(e) => setnewTaskUserId(Number(e.target.value))}
+              onChange={(e) => setNewTaskUserId(Number(e.target.value))}
               displayEmpty
             >
               <MenuItem sx={{ display: "none" }} value={undefined}>
@@ -250,7 +252,7 @@ useEffect(() => {
         )}
       </Box>
 
-      <Stack direction="row">
+      <Stack direction="row" spacing={2}>
         {columns.map(column => (
           <TaskList
             key={column.id}
@@ -266,4 +268,4 @@ useEffect(() => {
       </Stack>
     </>
   );
-}
+}}
