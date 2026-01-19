@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TaskList from "../TaskList/TaskList";
-import { Todo } from "../../types/index";
+import { Todo, Column } from "../../types";
 import {
   fetchTodos,
   createTodo,
@@ -20,12 +20,18 @@ import {
 } from "@mui/material";
 import { User } from "../../types/index";
 import { fetchUsers } from "../../api/users";
+import { fetchColumns } from "../../api/columns";
 
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
+  
+  const [columns, setColumns] = useState<Column[]>([]);
+
+  const [newTaskColumnId, setNewTaskColumnId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [color, setColor] = useState<"red" | "green">("green");
+
 
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
@@ -40,22 +46,38 @@ export default function TasksFetch() {
   );
 
 useEffect(() => {
-  Promise.all([fetchTodos(), fetchUsers()])
-    .then(([todosData, usersData]) => {
+  Promise.all([fetchTodos(), fetchUsers(), fetchColumns()])
+    .then(([apiTodos, usersData, columnsData]) => {
+      const appTodos = apiTodos.map(apiTodo => {
+        const column = columnsData.find(c => 
+          c.isCompleted === apiTodo.completed
+        );
+        return {
+          ...apiTodo,
+          columnId: column?.id,
+        };
+      });
+      setColumns(columnsData);
       setUsers(usersData);
-      setTodos(todosData);
+      setTodos(appTodos);
     })
     .catch(() => setError("Ошибка в получении контента"))
     .finally(() => setIsLoadingTasks(false));
 }, []);
 
+useEffect(() => {
+  if (columns.length && newTaskColumnId === null) {
+    setNewTaskColumnId(columns[0].id);
+  }
+}, [columns]);
+
   const activeTasks = useMemo(
-    () => todos.filter((task) => !task.completed),
+    () => todos.filter((task) => task.columnId === 'progress'),
     [todos]
   );
 
   const completedTasks = useMemo(
-    () => todos.filter((task) => task.completed),
+    () => todos.filter((task) => task.columnId === 'progress'),
     [todos]
   );
 
@@ -127,27 +149,33 @@ useEffect(() => {
   }, []);
 
   const createTask = async () => {
-    if (newTaskTitle.trim() === "") return;
+    if (!newTaskTitle.trim()) return;
+    if (!newTaskUserId) return;
+    if (newTaskColumnId === null) return;
+
+    const column = columns.find(c => c.id === newTaskColumnId);
+    if (!column) return;
+
     try {
-      if (newTaskUserId) {
-        const serverTask = await createTodo(
-          newTaskTitle.trim(),
-          newTaskCompleted === "completed",
-          newTaskUserId
+      const serverTask = await createTodo(
+        newTaskTitle.trim(),
+        column.isCompleted,
+        newTaskUserId
         );
-        // const newTask: Todo = {
-        //   ...serverTask,
-        //   completed:newTaskCompleted,
-        // };
-        setTodos((actualTodos) => [serverTask, ...actualTodos]);
+
+        const appTask = {
+          ...serverTask,
+          columnId: column.id,
+        } as Todo
+
+        setTodos((actualTodos) => [appTask, ...actualTodos]);
         setNewTaskTitle("");
         setIsCreating(false);
-      }
-    } catch (error) {
+    }
+      catch (error) {
       console.error("Error creating task;", error);
       setError("Error");
-    }
-  };
+    };
 
   if (isLoadingTasks) {
     return (
@@ -177,11 +205,14 @@ useEffect(() => {
 
             <Select
               size="small"
-              value={newTaskCompleted}
-              onChange={(e) => setNewTaskCompleted(e.target.value)}
+              value={newTaskColumnId}
+              onChange={(e) => setNewTaskColumnId(e.target.value)}
             >
-              <MenuItem value="progress">Активная</MenuItem>
-              <MenuItem value="completed">Завершённая</MenuItem>
+              {columns.map(col => (
+                <MenuItem key={col.id} value={col.id}>
+                  {col.title}
+                </MenuItem>
+              ))}
             </Select>
 
             <Select
@@ -220,24 +251,18 @@ useEffect(() => {
       </Box>
 
       <Stack direction="row">
-        <TaskList
-          title="Активные"
-          tasks={activeTasks}
-          users={users}
-          onToggle={toggleTask}
-          onUpdateTitle={updateTaskTitle}
-          onDelete={deleteTask}
-          deletingTaskId={deletingTaskId}
-        />
-        <TaskList
-          title="Завершенные"
-          tasks={completedTasks}
-          users={users}
-          onToggle={toggleTask}
-          onUpdateTitle={updateTaskTitle}
-          onDelete={deleteTask}
-          deletingTaskId={deletingTaskId}
-        />
+        {columns.map(column => (
+          <TaskList
+            key={column.id}
+            title={column.title}
+            tasks={todos.filter(t => t.columnId === column.id)}
+            users={users}
+            onToggle={toggleTask}
+            onUpdateTitle={updateTaskTitle}
+            onDelete={deleteTask}
+            deletingTaskId={deletingTaskId}
+          />
+        ))}
       </Stack>
     </>
   );

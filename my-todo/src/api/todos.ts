@@ -1,13 +1,20 @@
 const API_BASE_URL = "https://jsonplaceholder.typicode.com";
 
-export interface Todo {
-  userId: number; // 
+export interface TodoApiResponse {
+  userId: number; 
   id: number; 
   title: string; 
   completed: boolean;
 }
 
-export async function fetchTodos(): Promise<Todo[]> {
+export interface Todo {
+  userId: number; // 
+  id: number; 
+  title: string; 
+  columId: string;
+  user?: User;
+}
+export async function fetchTodos(): Promise<TodoApiResponse[]> {
 
   const response = await fetch(`${API_BASE_URL}/todos`);
 
@@ -17,6 +24,17 @@ export async function fetchTodos(): Promise<Todo[]> {
 
   return response.json();
 }
+
+// export async function fetchTodos(): Promise<Todo[]> {
+
+//   const response = await fetch(`${API_BASE_URL}/todos`);
+
+//   if (!response.ok) {
+//     throw new Error(`Failed to fetch todos: ${response.statusText}`);
+//   }
+
+//   return response.json();
+// }
 
 export async function createTodo(
   title: string,
