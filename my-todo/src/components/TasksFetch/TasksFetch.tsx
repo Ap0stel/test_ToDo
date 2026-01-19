@@ -20,66 +20,67 @@ import {
 } from "@mui/material";
 import { User } from "../../types/index";
 import { fetchUsers } from "../../api/users";
-import { fetchColumns } from "../../api/columns";
+
+const DEFAULT_COLUMNS: Column[] = [
+  { id: "completed", title: "В работе", order: 0 },
+  { id: "progress", title: "Завершено", order: 1 },
+];
 
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
-  
-  const [columns, setColumns] = useState<Column[]>([]);
+
+  const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
 
   const [newTaskColumnId, setNewTaskColumnId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [color, setColor] = useState<"red" | "green">("green");
 
-
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
-
-  const [newTaskCompleted, setNewTaskCompleted] = useState<string>("progress");
 
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
 
   const [users, setUsers] = useState<User[]>([]);
   const [newTaskUserId, setNewTaskUserId] = useState<number | undefined>(
-    undefined
+    undefined,
   );
 
-useEffect(() => {
-  Promise.all([fetchTodos(), fetchUsers(), fetchColumns()])
-    .then(([apiTodos, usersData, columnsData]) => {
-      const appTodos = apiTodos.map(apiTodo => {
-        const column = columnsData.find(c => 
-          c.isCompleted === apiTodo.completed
-        );
-        return {
+  useEffect(() => {
+    Promise.all([fetchTodos(), fetchUsers()])
+      .then(([apiTodos, usersData]) => {
+        const appTodos: Todo[] = apiTodos.map((apiTodo) => ({
           ...apiTodo,
-          columnId: column?.id,
-        };
-      });
-      setColumns(columnsData);
-      setUsers(usersData);
-      setTodos(appTodos);
-    })
-    .catch(() => setError("Ошибка в получении контента"))
-    .finally(() => setIsLoadingTasks(false));
-}, []);
+          id: String(apiTodo.id),
+          columnId: apiTodo.completed ? "completed" : "progress",
+          // Теперь у нас есть columnId, а completed можем игнорировать
+        }));
 
-// useEffect(() => {
-//   if (columns.length && newTaskColumnId === null) {
-//     setNewTaskColumnId(columns[0].id);
-//   }
-// }, [columns]);
+        setUsers(usersData);
+        setTodos(appTodos);
+      })
+      .catch(() => setError("Ошибка в получении контента"))
+      .finally(() => setIsLoadingTasks(false));
+  }, []);
 
-  const activeTasks = useMemo(
-    () => todos.filter((task) => task.columnId === 'progress'),
-    [todos]
-  );
+  const tasksByColumn = useMemo(() => {
+    const grouped: Record<string, Todo[]> = {};
 
-  const completedTasks = useMemo(
-    () => todos.filter((task) => task.columnId === 'progress'),
-    [todos]
-  );
+    //  { id: 1, title: "В работе", isCompleted: false },
+    // Инициализируем пустые массивы для каждой колонки
+    columns.forEach((column) => {
+      grouped[column.id] = [];
+    });
+
+    // Один проход по всем задачам, распределяем по колонкам
+    todos.forEach((task) => {
+      if (grouped[task.columnId]) {
+        grouped[task.columnId].push(task);
+      }
+    });
+
+    return grouped;
+  }, [todos, columns]);
 
   // коллбеки нужно передавать в дочерние компоненты, используя useCallback. в таком случае
   // ссылка на функцию не будет меняться на каждом рендере
@@ -94,7 +95,7 @@ useEffect(() => {
 
       try {
         const updatedTodos = todos.map((t) =>
-          t.id === taskId ? { ...t, completed: !t.completed } : t
+          t.id === taskId ? { ...t, completed: !t.completed } : t,
         );
         setTodos(updatedTodos);
 
@@ -104,7 +105,7 @@ useEffect(() => {
         setError("Error");
       }
     },
-    [color, todos]
+    [color, todos],
   );
 
   const updateTaskTitle = useCallback(
@@ -115,7 +116,7 @@ useEffect(() => {
 
       try {
         const updTodos = todos.map((task) =>
-          task.id === taskId ? { ...task, title: newTitle.trim() } : task
+          task.id === taskId ? { ...task, title: newTitle.trim() } : task,
         );
         setTodos(updTodos);
 
@@ -127,7 +128,7 @@ useEffect(() => {
         setError("Ошибка при редактировании задачи");
       }
     },
-    [todos]
+    [todos],
   );
 
   const deleteTask = useCallback(async (taskId: number) => {
@@ -138,7 +139,7 @@ useEffect(() => {
 
       // Удаляем из локального state
       setTodos((actualTodos) =>
-        actualTodos.filter((task) => task.id !== taskId)
+        actualTodos.filter((task) => task.id !== taskId),
       );
     } catch (error) {
       console.error("Error deleting task:", error);
@@ -153,31 +154,31 @@ useEffect(() => {
     if (!newTaskUserId) return;
     if (newTaskColumnId === null) return;
 
-    const column = columns.find(c => c.id === newTaskColumnId);
+    const column = columns.find((c) => c.id === newTaskColumnId);
     if (!column) return;
 
     try {
       const serverTask = await createTodo(
         newTaskTitle.trim(),
         column.isCompleted,
-        newTaskUserId
-        );
+        newTaskUserId,
+      );
 
-        const appTask: Todo = {
-          ...serverTask,
-          columnId: column.id,
-        }
+      const appTask: Todo = {
+        ...serverTask,
+        columnId: column.id,
+      };
 
-        setTodos((actualTodos) => [appTask, ...actualTodos]);
-        setNewTaskTitle("");
-        setnewTaskUserId(undefined);
-        setNewTaskColumnId(null);
-        setIsCreating(false);
-    }
-      catch (error) {
+      setTodos((actualTodos) => [appTask, ...actualTodos]);
+      setNewTaskTitle("");
+      setnewTaskUserId(undefined);
+      setNewTaskColumnId(null);
+      setIsCreating(false);
+    } catch (error) {
       console.error("Error creating task;", error);
       setError("Error");
-    };
+    }
+  };
 
   if (isLoadingTasks) {
     return (
@@ -189,8 +190,6 @@ useEffect(() => {
   if (error) {
     return <Alert severity="error">{error}</Alert>;
   }
-  console.log(newTaskUserId);
-  console.log(activeTasks);
 
   return (
     <>
@@ -210,7 +209,7 @@ useEffect(() => {
               value={newTaskColumnId}
               onChange={(e) => setNewTaskColumnId(e.target.value)}
             >
-              {columns.map(col => (
+              {columns.map((col) => (
                 <MenuItem key={col.id} value={col.id}>
                   {col.title}
                 </MenuItem>
@@ -253,19 +252,21 @@ useEffect(() => {
       </Box>
 
       <Stack direction="row" spacing={2}>
-        {columns.map(column => (
-          <TaskList
-            key={column.id}
-            title={column.title}
-            tasks={todos.filter(t => t.columnId === column.id)}
-            users={users}
-            onToggle={toggleTask}
-            onUpdateTitle={updateTaskTitle}
-            onDelete={deleteTask}
-            deletingTaskId={deletingTaskId}
-          />
-        ))}
+        {columns
+          .sort((a, b) => a.order - b.order)
+          .map((column) => (
+            <TaskList
+              key={column.id}
+              title={column.title}
+              tasks={tasksByColumn[column.id] || []}
+              users={users}
+              onToggle={toggleTask}
+              onUpdateTitle={updateTaskTitle}
+              onDelete={deleteTask}
+              deletingTaskId={deletingTaskId}
+            />
+          ))}
       </Stack>
     </>
   );
-}}
+}

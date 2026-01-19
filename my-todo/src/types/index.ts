@@ -7,10 +7,9 @@ export interface Task {
 
 export interface Todo {
   userId: number;
-  id: number;
+  id: string;
   title: string;
-  completed: boolean;
-  columnId: number;
+  columnId: string;
   user?: User;
 }
 
@@ -21,7 +20,7 @@ export interface User {
 }
 
 export interface Column {
-  id: number;
+  id: string;
   title: string;
-  isCompleted: boolean;
+  order: number;
 }
