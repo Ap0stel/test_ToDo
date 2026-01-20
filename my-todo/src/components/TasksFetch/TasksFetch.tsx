@@ -86,27 +86,52 @@ export default function TasksFetch() {
   // ссылка на функцию не будет меняться на каждом рендере
   // иначе React будет считать, что проп toggleTask изменился, и это вызовет лишние перерисовки / эффекты / пересоздание подписок.
 
-  const toggleTask = useCallback(
-    async (taskId: number) => {
-      setColor(color === "red" ? "green" : "red");
+  // const toggleTask = useCallback(
+  //   async (taskId: number) => {
+  //     setColor(color === "red" ? "green" : "red");
 
-      const task = todos.find((t) => t.id === taskId);
-      if (!task) return;
+  //     const task = todos.find((t) => t.id === taskId);
+  //     if (!task) return;
 
-      try {
-        const updatedTodos = todos.map((t) =>
-          t.id === taskId ? { ...t, completed: !t.completed } : t,
-        );
-        setTodos(updatedTodos);
+  //     try {
+  //       const updatedTodos = todos.map((t) =>
+  //         t.id === taskId ? { ...t, completed: !t.completed } : t,
+  //       );
+  //       setTodos(updatedTodos);
 
-        await updateTodo(taskId, { completed: !task.completed });
-      } catch (error) {
-        console.error("Error", error);
-        setError("Error");
-      }
-    },
-    [color, todos],
-  );
+  //       await updateTodo(taskId, { completed: !task.completed });
+  //     } catch (error) {
+  //       console.error("Error", error);
+  //       setError("Error");
+  //     }
+  //   },
+  //   [color, todos],
+  // );
+
+  const moveTaskToColumn = useCallback(async (taskId: string, targetColumnId: string) => {
+    const task = todos.find(t => t.id === taskId);
+    if (!task) return;
+
+    try {
+      const updatedTodos = todos.map(t => 
+        t.id === taskId ? {...t, columnId: targetColumnId } : t   
+      );
+      setTodos(updatedTodos);
+    } catch (error) {
+      console.error('Error moving task:', error);
+    }
+  }, [todos]);
+
+  const toggleTask = useCallback((taskId: string) => {
+    const task = todos.find(t => t.id === taskId);
+    if (!task) return;
+
+    const targetColumnId = task.columnId === 'completed'
+      ? 'progress'
+      : 'completed';
+    moveTaskToColumn(taskId, targetColumnId);
+  }, [todos, columns, moveTaskToColumn]);
+
 
   const updateTaskTitle = useCallback(
     async (taskId: number, newTitle: string) => {

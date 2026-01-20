@@ -69,7 +69,7 @@ function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, 
       }}
     >
       <Checkbox
-        checked={task.completed}
+        checked={task.columnId === 'completed'}
         onChange={() => onToggle(task.id)}
         disabled={isDeleting}
       />
