@@ -22,17 +22,28 @@ import { User } from "../../types/index";
 import { fetchUsers } from "../../api/users";
 
 const DEFAULT_COLUMNS: Column[] = [
-  { id: "completed", title: "В работе", order: 0 },
-  { id: "progress", title: "Завершено", order: 1 },
+  { id: "progress", title: "В работе", order: 0 },
+  { id: "completed", title: "Завершено", order: 1 },
 ];
 
 export default function TasksFetch() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
 
-  const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
+  // const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
+  const [columns, setColumns] = useState<Column[]>(() => {
+    const saved = localStorage.getItem('columns');
+    if (saved) {
+      try {
+        return JSON.parse(saved);        
+      } catch {
+        return DEFAULT_COLUMNS; 
+      }
+    }
+    return DEFAULT_COLUMNS;
+  });
 
-  const [newTaskColumnId, setNewTaskColumnId] = useState<number | null>(null);
+  const [newTaskColumnId, setNewTaskColumnId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [color, setColor] = useState<"red" | "green">("green");
 
@@ -42,9 +53,12 @@ export default function TasksFetch() {
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
 
   const [users, setUsers] = useState<User[]>([]);
-  const [newTaskUserId, setNewTaskUserId] = useState<number | undefined>(
-    undefined,
-  );
+  const [newTaskUserId, setNewTaskUserId] = useState<number | "">("");
+
+  const [isCreatingColumn, setIsCreatingColumn] = useState<boolean>(false);
+  const [newColumnTitle, setNewColumnTitle] = useState<string>("");
+
+  const COMPLETED_COLUMN_ID = 'completed';
 
   useEffect(() => {
     Promise.all([fetchTodos(), fetchUsers()])
@@ -52,7 +66,9 @@ export default function TasksFetch() {
         const appTodos: Todo[] = apiTodos.map((apiTodo) => ({
           ...apiTodo,
           id: String(apiTodo.id),
-          columnId: apiTodo.completed ? "completed" : "progress",
+          columnId: apiTodo.completed
+            ? COMPLETED_COLUMN_ID 
+            : "progress",
           // Теперь у нас есть columnId, а completed можем игнорировать
         }));
 
@@ -126,15 +142,55 @@ export default function TasksFetch() {
     const task = todos.find(t => t.id === taskId);
     if (!task) return;
 
-    const targetColumnId = task.columnId === 'completed'
+    const targetColumnId = task.columnId === COMPLETED_COLUMN_ID
       ? 'progress'
-      : 'completed';
+      : COMPLETED_COLUMN_ID;
     moveTaskToColumn(taskId, targetColumnId);
-  }, [todos, columns, moveTaskToColumn]);
+  }, [todos, moveTaskToColumn]);
+
+  const generateColumnId = (title: string): string => {
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]/g, '');
+  };
+
+  const addNewColumn = useCallback((title: string) => {
+    const id = generateColumnId(title);
+
+    if (columns.some(col => col.id === id)) {
+      setError('Колонка с таким названием уже есть');
+      return;
+    }
+
+    const newColumn: Column = {
+      id,
+      title,
+      order: columns.length
+    };
+
+    setColumns([...columns, newColumn]);
+  }, [columns]);
+
+
+  // const [columns, setColumns] = useSate<Column[]>(() => {
+  //   const saved = localStorage.getItem('columns');
+  //   if (saved) {
+  //     try {
+  //       return JSON.parse(saved);        
+  //     } catch {
+  //       return DEFAULT_COLUMNS; 
+  //     }
+  //   }
+  //   return DEFAULT_COLUMNS;
+  // });
+  useEffect(() => {
+    localStorage.setItem('columns', JSON.stringify(columns));
+  }, [columns]);
 
 
   const updateTaskTitle = useCallback(
-    async (taskId: number, newTitle: string) => {
+    async (taskId: string, newTitle: string) => {
       if (newTitle.trim() === "") {
         return;
       }
@@ -176,16 +232,15 @@ export default function TasksFetch() {
 
   const createTask = async () => {
     if (!newTaskTitle.trim()) return;
-    if (!newTaskUserId) return;
-    if (newTaskColumnId === null) return;
+    if (newTaskUserId === "") return;
+    if (!newTaskColumnId) return;
 
     const column = columns.find((c) => c.id === newTaskColumnId);
     if (!column) return;
-
+    
     try {
       const serverTask = await createTodo(
         newTaskTitle.trim(),
-        column.isCompleted,
         newTaskUserId,
       );
 
@@ -196,8 +251,8 @@ export default function TasksFetch() {
 
       setTodos((actualTodos) => [appTask, ...actualTodos]);
       setNewTaskTitle("");
-      setnewTaskUserId(undefined);
-      setNewTaskColumnId(null);
+      setNewTaskUserId("");
+      setNewTaskColumnId("");
       setIsCreating(false);
     } catch (error) {
       console.error("Error creating task;", error);
@@ -233,7 +288,12 @@ export default function TasksFetch() {
               size="small"
               value={newTaskColumnId}
               onChange={(e) => setNewTaskColumnId(e.target.value)}
+              displayEmpty
             >
+              <MenuItem value="">
+                <em>Выберите колонку</em>
+              </MenuItem>
+
               {columns.map((col) => (
                 <MenuItem key={col.id} value={col.id}>
                   {col.title}
@@ -247,8 +307,8 @@ export default function TasksFetch() {
               onChange={(e) => setNewTaskUserId(Number(e.target.value))}
               displayEmpty
             >
-              <MenuItem sx={{ display: "none" }} value={undefined}>
-                Выберите пользователя
+              <MenuItem sx={{ display: "none" }} value="">
+                <em>Выберите пользователя</em>
               </MenuItem>
               {users.map((user) => (
                 <MenuItem key={user.id} value={user.id}>
@@ -275,6 +335,47 @@ export default function TasksFetch() {
           </Button>
         )}
       </Box>
+      
+      <Box mb={3}>
+        {isCreatingColumn ? (
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              size="small"
+              label="Название колонки"
+              value={newColumnTitle}
+              onChange={(e) => setNewColumnTitle(e.target.value)}
+              autoFocus
+            />
+
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (!newColumnTitle.trim()) return;
+                addNewColumn(newColumnTitle.trim());
+                setNewColumnTitle('');
+                setIsCreatingColumn(false);
+            }}
+            >
+              Создать колонку
+            </Button>
+
+            <Button
+              variant="text"
+              onClick={() => setIsCreatingColumn(false)}
+            >
+              Отмена
+            </Button>
+          </Stack>
+        ) : (
+          <Button
+            variant="outlined"
+            onClick={() => setIsCreatingColumn(true)}
+          >
+            +Добавиь колонку
+          </Button>
+        )}
+      </Box>
+
 
       <Stack direction="row" spacing={2}>
         {columns
