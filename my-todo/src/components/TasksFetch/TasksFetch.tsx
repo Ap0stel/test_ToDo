@@ -289,8 +289,16 @@ export default function TasksFetch() {
               value={newTaskColumnId}
               onChange={(e) => setNewTaskColumnId(e.target.value)}
               displayEmpty
+              renderValue={(selected) => {
+                if (!selected) {
+                  return <em>Выберите колонку</em>;
+                }
+
+                const column = columns.find(col => col.id === selected);
+                return column?.title;
+              }}
             >
-              <MenuItem value="">
+              <MenuItem sx={{ display: "none" }} value="">
                 <em>Выберите колонку</em>
               </MenuItem>
 
@@ -317,7 +325,7 @@ export default function TasksFetch() {
               ))}
             </Select>
 
-            <Button variant="contained" onClick={createTask}>
+            <Button variant="contained" onClick={createTask} disabled={!newTaskTitle.trim() || !newTaskColumnId || !newTaskUserId}>
               Создать
             </Button>
 
@@ -368,7 +376,7 @@ export default function TasksFetch() {
           </Stack>
         ) : (
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={() => setIsCreatingColumn(true)}
           >
             +Добавиь колонку
