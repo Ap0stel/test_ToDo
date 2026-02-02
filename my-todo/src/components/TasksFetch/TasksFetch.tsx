@@ -1,7 +1,8 @@
 /* eslint-disable jsx-a11y/no-autofocus */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useDeferredValue } from "react";
 import TaskList from "../TaskList/TaskList";
 import { Todo, Column } from "../../types";
+import { CreateTaskForm } from "../CreateTaskForm/CreateTaskForm";
 import {
   fetchTodos,
   createTodo,
@@ -43,17 +44,17 @@ export default function TasksFetch() {
     return DEFAULT_COLUMNS;
   });
 
-  const [newTaskColumnId, setNewTaskColumnId] = useState<string>("");
+  // const [newTaskColumnId, setNewTaskColumnId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [color, setColor] = useState<"red" | "green">("green");
 
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [newTaskTitle, setNewTaskTitle] = useState<string>("");
+  // const [newTaskTitle, setNewTaskTitle] = useState<string>("");
 
   const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null);
 
   const [users, setUsers] = useState<User[]>([]);
-  const [newTaskUserId, setNewTaskUserId] = useState<number | "">("");
+  // const [newTaskUserId, setNewTaskUserId] = useState<number | "">("");
 
   const [isCreatingColumn, setIsCreatingColumn] = useState<boolean>(false);
   const [newColumnTitle, setNewColumnTitle] = useState<string>("");
@@ -125,35 +126,45 @@ export default function TasksFetch() {
   // );
 
   const moveTaskToColumn = useCallback(async (taskId: string, targetColumnId: string) => {
-    const task = todos.find(t => t.id === taskId);
-    if (!task) return;
+    setTodos(currentTodos => {
+      const task = currentTodos.find(t => t.id === taskId);
+      if (!task) return currentTodos;
 
-    try {
-      const updatedTodos = todos.map(t => 
-        t.id === taskId ? {...t, columnId: targetColumnId } : t   
+      return currentTodos.map(t =>
+        t.id === taskId ? {...t, columnId: targetColumnId } : t
       );
-      setTodos(updatedTodos);
-    } catch (error) {
-      console.error('Error moving task:', error);
-    }
-  }, [todos]);
+    });
+  }, []);
 
   const toggleTask = useCallback((taskId: string) => {
-    const task = todos.find(t => t.id === taskId);
-    if (!task) return;
+    setTodos((currentTodos) => {
+      const task = currentTodos.find(t => t.id === taskId);
+      if (!task) return currentTodos;
 
-    const targetColumnId = task.columnId === COMPLETED_COLUMN_ID
-      ? 'progress'
-      : COMPLETED_COLUMN_ID;
-    moveTaskToColumn(taskId, targetColumnId);
-  }, [todos, moveTaskToColumn]);
+      const targetColumnId =
+        task.columnId === COMPLETED_COLUMN_ID ? "progress" : COMPLETED_COLUMN_ID;
 
-  const generateColumnId = (title: string): string => {
-    return title
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]/g, '');
-  };
+      return currentTodos.map(t =>
+        t.id === taskId ? { ...t, columnId: targetColumnId } : t
+      );
+    });
+  }, []);
+  // const toggleTask = useCallback((taskId: string) => {
+  //   const task = todos.find(t => t.id === taskId);
+  //   if (!task) return;
+
+  //   const targetColumnId = task.columnId === COMPLETED_COLUMN_ID
+  //     ? 'progress'
+  //     : COMPLETED_COLUMN_ID;
+  //   moveTaskToColumn(taskId, targetColumnId);
+  // }, [todos, moveTaskToColumn]);
+
+  // const generateColumnId = (title: string): string => {
+  //   return title
+  //     .toLowerCase()
+  //     .replace(/\s+/g, '-')
+  //     .replace(/[^\w\-]/g, '');
+  // };
 
   const addNewColumn = useCallback((title: string) => {
     const id = generateColumnId(title);
@@ -189,28 +200,34 @@ export default function TasksFetch() {
   }, [columns]);
 
 
-  const updateTaskTitle = useCallback(
-    async (taskId: string, newTitle: string) => {
-      if (newTitle.trim() === "") {
-        return;
+const updateTaskTitle = useCallback(async (taskId: string, newTitle: string) => {
+  const trimmed = newTitle.trim();
+  if (!trimmed) return;
+
+  let previousTitle: string | null = null;
+
+  setTodos((currentTodos) =>
+    currentTodos.map((task) => {
+      if (task.id === taskId) {
+        previousTitle = task.title;
+        return { ...task, title: trimmed };
       }
-
-      try {
-        const updTodos = todos.map((task) =>
-          task.id === taskId ? { ...task, title: newTitle.trim() } : task,
-        );
-        setTodos(updTodos);
-
-        await updateTodo(taskId, { title: newTitle.trim() });
-
-        setTodos(updTodos);
-      } catch (error) {
-        console.error("Error updating task title:", error);
-        setError("Ошибка при редактировании задачи");
-      }
-    },
-    [todos],
+      return task;
+    })
   );
+
+  try {
+    await updateTodo(taskId, { title: trimmed });
+  } catch {
+    if (previousTitle !== null) {
+      setTodos((currentTodos) =>
+        currentTodos.map((task) =>
+          task.id === taskId ? { ...task, title: previousTitle! } : task
+        )
+      );
+    }
+  }
+}, []);
 
   const deleteTask = useCallback(async (taskId: number) => {
     try {
@@ -230,35 +247,55 @@ export default function TasksFetch() {
     }
   }, []);
 
-  const createTask = async () => {
-    if (!newTaskTitle.trim()) return;
-    if (newTaskUserId === "") return;
-    if (!newTaskColumnId) return;
-
-    const column = columns.find((c) => c.id === newTaskColumnId);
-    if (!column) return;
-    
+  const handleCreateTask = async (
+    title: string, 
+    userId: number, 
+    columnId: string,
+  ) => {
     try {
-      const serverTask = await createTodo(
-        newTaskTitle.trim(),
-        newTaskUserId,
-      );
+      const serverTask = await createTodo(title, userId);
 
       const appTask: Todo = {
         ...serverTask,
-        columnId: column.id,
+        columnId,
       };
 
-      setTodos((actualTodos) => [appTask, ...actualTodos]);
-      setNewTaskTitle("");
-      setNewTaskUserId("");
-      setNewTaskColumnId("");
-      setIsCreating(false);
+      setTodos((prevTodos) => [appTask, ...prevTodos]);
     } catch (error) {
-      console.error("Error creating task;", error);
-      setError("Error");
+      console.error('Error creating task:', error);
+      setError('Ошибка при создании задачи');
     }
   };
+
+  // const createTask = async () => {
+  //   if (!newTaskTitle.trim()) return;
+  //   if (newTaskUserId === "") return;
+  //   if (!newTaskColumnId) return;
+
+  //   const column = columns.find((c) => c.id === newTaskColumnId);
+  //   if (!column) return;
+    
+  //   try {
+  //     const serverTask = await createTodo(
+  //       newTaskTitle.trim(),
+  //       newTaskUserId,
+  //     );
+
+  //     const appTask: Todo = {
+  //       ...serverTask,
+  //       columnId: column.id,
+  //     };
+
+  //     setTodos((actualTodos) => [appTask, ...actualTodos]);
+  //     setNewTaskTitle("");
+  //     setNewTaskUserId("");
+  //     setNewTaskColumnId("");
+  //     setIsCreating(false);
+  //   } catch (error) {
+  //     console.error("Error creating task;", error);
+  //     setError("Error");
+  //   }
+  // };
 
   if (isLoadingTasks) {
     return (
@@ -273,134 +310,153 @@ export default function TasksFetch() {
 
   return (
     <>
-      <Box mb={3}>
-        {isCreating ? (
-          <Stack direction="row" spacing={3} alignItems="flex-start">
-            <TextField
-              label="Новая задача"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              size="small"
-              autoFocus
-            />
-
-            <Select
-              size="small"
-              value={newTaskColumnId}
-              onChange={(e) => setNewTaskColumnId(e.target.value)}
-              displayEmpty
-              renderValue={(selected) => {
-                if (!selected) {
-                  return <em>Выберите колонку</em>;
-                }
-
-                const column = columns.find(col => col.id === selected);
-                return column?.title;
-              }}
-            >
-              <MenuItem sx={{ display: "none" }} value="">
-                <em>Выберите колонку</em>
-              </MenuItem>
-
-              {columns.map((col) => (
-                <MenuItem key={col.id} value={col.id}>
-                  {col.title}
-                </MenuItem>
-              ))}
-            </Select>
-
-            <Select
-              size="small"
-              value={newTaskUserId}
-              onChange={(e) => setNewTaskUserId(Number(e.target.value))}
-              displayEmpty
-            >
-              <MenuItem sx={{ display: "none" }} value="">
-                <em>Выберите пользователя</em>
-              </MenuItem>
-              {users.map((user) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.name}
-                </MenuItem>
-              ))}
-            </Select>
-
-            <Button variant="contained" onClick={createTask} disabled={!newTaskTitle.trim() || !newTaskColumnId || !newTaskUserId}>
-              Создать
-            </Button>
-
-            <Button
-              variant="text"
-              color="inherit"
-              onClick={() => setIsCreating(false)}
-            >
-              Отмена
-            </Button>
-          </Stack>
-        ) : (
-          <Button variant="contained" onClick={() => setIsCreating(true)}>
-            + Добавить задачу
-          </Button>
-        )}
-      </Box>
-      
-      <Box mb={3}>
-        {isCreatingColumn ? (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              size="small"
-              label="Название колонки"
-              value={newColumnTitle}
-              onChange={(e) => setNewColumnTitle(e.target.value)}
-              autoFocus
-            />
-
-            <Button
-              variant="contained"
-              onClick={() => {
-                if (!newColumnTitle.trim()) return;
-                addNewColumn(newColumnTitle.trim());
-                setNewColumnTitle('');
-                setIsCreatingColumn(false);
-            }}
-            >
-              Создать колонку
-            </Button>
-
-            <Button
-              variant="text"
-              onClick={() => setIsCreatingColumn(false)}
-            >
-              Отмена
-            </Button>
-          </Stack>
-        ) : (
-          <Button
-            variant="contained"
-            onClick={() => setIsCreatingColumn(true)}
-          >
-            +Добавиь колонку
-          </Button>
-        )}
-      </Box>
-
+      <CreateTaskForm
+        columns={columns}
+        users={users}
+        onCreate={handleCreateTask}
+      />
 
       <Stack direction="row" spacing={2}>
-        {columns
-          .sort((a, b) => a.order - b.order)
-          .map((column) => (
-            <TaskList
-              key={column.id}
-              title={column.title}
-              tasks={tasksByColumn[column.id] || []}
-              users={users}
-              onToggle={toggleTask}
-              onUpdateTitle={updateTaskTitle}
-              onDelete={deleteTask}
-              deletingTaskId={deletingTaskId}
-            />
-          ))}
+        {columns.map((column) => (
+          <TaskList
+            key={column.id}
+            title={column.title}
+            tasks={tasksByColumn[column.id]}
+            users={users}
+            onToggle={toggleTask}
+          />
+        ))}
       </Stack>
     </>
+  //   <>
+  //     <Box mb={3}>
+  //       {isCreating ? (
+  //         <Stack direction="row" spacing={3} alignItems="flex-start">
+  //           <TextField
+  //             label="Новая задача"
+  //             value={newTaskTitle}
+  //             onChange={(e) => setNewTaskTitle(e.target.value)}
+  //             size="small"
+  //             autoFocus
+  //           />
+
+  //           <Select
+  //             size="small"
+  //             value={newTaskColumnId}
+  //             onChange={(e) => setNewTaskColumnId(e.target.value)}
+  //             displayEmpty
+  //             renderValue={(selected) => {
+  //               if (!selected) {
+  //                 return <em>Выберите колонку</em>;
+  //               }
+
+  //               const column = columns.find(col => col.id === selected);
+  //               return column?.title;
+  //             }}
+  //           >
+  //             <MenuItem sx={{ display: "none" }} value="">
+  //               <em>Выберите колонку</em>
+  //             </MenuItem>
+
+  //             {columns.map((col) => (
+  //               <MenuItem key={col.id} value={col.id}>
+  //                 {col.title}
+  //               </MenuItem>
+  //             ))}
+  //           </Select>
+
+  //           <Select
+  //             size="small"
+  //             value={newTaskUserId}
+  //             onChange={(e) => setNewTaskUserId(Number(e.target.value))}
+  //             displayEmpty
+  //           >
+  //             <MenuItem sx={{ display: "none" }} value="">
+  //               <em>Выберите пользователя</em>
+  //             </MenuItem>
+  //             {users.map((user) => (
+  //               <MenuItem key={user.id} value={user.id}>
+  //                 {user.name}
+  //               </MenuItem>
+  //             ))}
+  //           </Select>
+
+  //           <Button variant="contained" onClick={createTask} disabled={!newTaskTitle.trim() || !newTaskColumnId || !newTaskUserId}>
+  //             Создать
+  //           </Button>
+
+  //           <Button
+  //             variant="text"
+  //             color="inherit"
+  //             onClick={() => setIsCreating(false)}
+  //           >
+  //             Отмена
+  //           </Button>
+  //         </Stack>
+  //       ) : (
+  //         <Button variant="contained" onClick={() => setIsCreating(true)}>
+  //           + Добавить задачу
+  //         </Button>
+  //       )}
+  //     </Box>
+      
+  //     <Box mb={3}>
+  //       {isCreatingColumn ? (
+  //         <Stack direction="row" spacing={2} alignItems="center">
+  //           <TextField
+  //             size="small"
+  //             label="Название колонки"
+  //             value={newColumnTitle}
+  //             onChange={(e) => setNewColumnTitle(e.target.value)}
+  //             autoFocus
+  //           />
+
+  //           <Button
+  //             variant="contained"
+  //             onClick={() => {
+  //               if (!newColumnTitle.trim()) return;
+  //               addNewColumn(newColumnTitle.trim());
+  //               setNewColumnTitle('');
+  //               setIsCreatingColumn(false);
+  //           }}
+  //           >
+  //             Создать колонку
+  //           </Button>
+
+  //           <Button
+  //             variant="text"
+  //             onClick={() => setIsCreatingColumn(false)}
+  //           >
+  //             Отмена
+  //           </Button>
+  //         </Stack>
+  //       ) : (
+  //         <Button
+  //           variant="contained"
+  //           onClick={() => setIsCreatingColumn(true)}
+  //         >
+  //           +Добавиь колонку
+  //         </Button>
+  //       )}
+  //     </Box>
+
+
+  //     <Stack direction="row" spacing={2}>
+  //       {columns
+  //         .sort((a, b) => a.order - b.order)
+  //         .map((column) => (
+  //           <TaskList
+  //             key={column.id}
+  //             title={column.title}
+  //             tasks={tasksByColumn[column.id] || []}
+  //             users={users}
+  //             onToggle={toggleTask}
+  //             onUpdateTitle={updateTaskTitle}
+  //             onDelete={deleteTask}
+  //             deletingTaskId={deletingTaskId}
+  //           />
+  //         ))}
+  //     </Stack>
+  //   </>
   );
 }
