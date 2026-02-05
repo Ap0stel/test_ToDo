@@ -14,10 +14,10 @@ import { Delete, Opacity } from "@mui/icons-material";
 interface TaskProps {
   task: Todo;
   users: User[];
-  onToggle: (id: number) => void;
-  onUpdateTitle: (taskId: number, newTitle: string) => void;
-  onDelete: (taskId: number) => void;
-  deletingTaskId: number | null;
+  onToggle: (id: string) => void;
+  onUpdateTitle: (taskId: string, newTitle: string) => void;
+  onDelete: (taskId: string) => void;
+  deletingTaskId: string | null;
 }
 
 function Task({ task, users, onToggle, onUpdateTitle, onDelete, deletingTaskId, }: Readonly<TaskProps>) {

@@ -1,5 +1,5 @@
 import Task from "../Task/Task";
-import { Todo } from "../../types";
+import { Todo, User } from "../../types";
 import {Box, Typography } from "@mui/material";
 interface TaskListProps {
   tasks: Todo[];
@@ -7,8 +7,8 @@ interface TaskListProps {
   users: User[];
   onToggle: (id: number) => void;
   onUpdateTitle: (taskId: number, newTitle: string) => void;
-  onDelete: (taskId: number) => void;
-  deletingTaskId: number | null;
+  onDelete: (taskId: string) => void;
+  deletingTaskId: string | null;
 }
 
 export default function TaskList({

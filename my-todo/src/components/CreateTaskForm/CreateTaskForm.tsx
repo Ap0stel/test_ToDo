@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   MenuItem,
@@ -11,13 +11,20 @@ import { Column, User } from "../../types";
 type Props = {
   columns: Column[];
   users: User[];
-  onCreate: (title: string, userId: number, columnId: string) => void;
+  onCreate: (title: string, userId: string, columnId: string) => void;
 };
 
 export function CreateTaskForm({ columns, users, onCreate }: Props) {
   const [title, setTitle] = useState("");
   const [columnId, setColumnId] = useState<string>("");
-  const [userId, setUserId] = useState<number | "">("");
+  const [userId, setUserId] = useState<string>("");
+  
+  useEffect(() => {
+    if (columnId && !columns.some(col => col.id === columnId)) {
+        setColumnId('');
+    }
+  }, [columns, columnId]);
+
 
   const handleSubmit = () => {
     if (!title.trim() || !columnId || !userId) return;
@@ -46,7 +53,7 @@ export function CreateTaskForm({ columns, users, onCreate }: Props) {
         onChange={(e) => setColumnId(e.target.value)}
         displayEmpty
       >
-        <MenuItem sx={{ display: "none" }} value="">
+        <MenuItem sx = {{ display: 'none'}} value="">
           <em>Выберите колонку</em>
         </MenuItem>
 
@@ -60,7 +67,7 @@ export function CreateTaskForm({ columns, users, onCreate }: Props) {
       <Select
         size="small"
         value={userId}
-        onChange={(e) => setUserId(Number(e.target.value))}
+        onChange={(e) => setUserId((e.target.value))}
         displayEmpty
       >
         <MenuItem sx={{ display: "none" }} value="">
